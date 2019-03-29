@@ -1,1 +1,3 @@
 tags
+data/*
+pythia/__pycache__/*
