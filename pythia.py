@@ -11,6 +11,6 @@ logging.basicConfig(level=logging.INFO)
 
 config = pythia.config.load_config("sample.json")
 single_run = config["runs"][0]
-peerless = pythia.io.peer(single_run)
+peerless = pythia.io.peer(single_run, config.get("sample", None))
 pythia.runner.run_peerless(single_run, peerless, config)
 pprint.pprint(config)

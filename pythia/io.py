@@ -15,12 +15,9 @@ def _get_site_raster_value(dataset, band, site):
     return band[row, col]
 
 
-def peer(run, sample=False, sample_size=1):
+def peer(run, sample_size=None):
     rasters = pythia.util.get_rasters_dict(run)
-    if sample:
-        sites = pythia.functions.xy_from_vector(run["sites"])[0:sample_size]
-    else:
-        sites = pythia.functions.xy_from_vector(run["sites"])
+    sites = pythia.functions.xy_from_vector(run["sites"])
     data = []
     nodata = []
     layers = list(rasters.keys())
@@ -35,7 +32,7 @@ def peer(run, sample=False, sample_size=1):
                          for site in sites])
     peerless = list(filter(lambda x: x is not None, [read_layer_by_cell(
         i, data, nodata, layers, sites) for i in range(len(sites))]))
-    return peerless
+    return peerless[:sample_size]
 
 
 def read_layer_by_cell(idx, data, nodata, layers, sites):

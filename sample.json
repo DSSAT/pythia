@@ -1,9 +1,10 @@
 {
     "name": "example",
-    "workDir": "example/unity",
+    "workDir": "work/unity",
     "templateDir": "data/templates",
     "weatherDir":"data/weathers",
     "threads": 8,
+    "sample": 10,
     "default_setup": {
         "template": "SORG8433.SNX",
         "sites": "xy_from_vector::data/shapes/unity_sites.shp",
