@@ -24,10 +24,6 @@
         {
             "sname": "maize-q1",
             "harvestArea": "raster::data/rasters/unity_spam_harvest_maize.tif"
-        },
-        {
-            "sname": "sorg-q1",
-            "harvestedArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif"
         }
     ],
     "dssat": {
