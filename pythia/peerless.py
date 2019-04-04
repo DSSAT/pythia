@@ -32,7 +32,7 @@ def compose_peerless(ctx):
     if "weatherDir" in config:
         shutil.copy2(os.path.join(config["weatherDir"], context["wthFile"]), os.path.join(
             this_output_dir, "{}.WTH".format(context["wsta"])))
-    for soil in run["soils"]:
+    for soil in run["soilFiles"]:
         shutil.copy2(soil, this_output_dir)
     xfile = pythia.template.render_template(env, run["template"], context)
     with open(os.path.join(this_output_dir, run["template"]), "w") as f:

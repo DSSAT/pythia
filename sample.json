@@ -8,7 +8,7 @@
     "default_setup": {
         "template": "SORG8433.SNX",
         "sites": "xy_from_vector::data/shapes/unity_sites.shp",
-        "soils": ["data/base/HC.SOL"],
+        "soilFiles": ["data/base/HC.SOL"],
         "startYear": 1984,
         "initialN": 5,
         "fractionalAW": 0.25,
