@@ -48,7 +48,7 @@ def oracle():
         q.task_done()
 
 
-def run_peerless(run, peerless, config):
+def execute(run, peerless, config):
     threads = []
     for i in range(config["threads"]):
         t = threading.Thread(target=oracle)
