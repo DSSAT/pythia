@@ -1,12 +1,10 @@
-import json
 import os
 
 import fiona
 import rasterio
 
-import pythia.util
 import pythia.functions
-
+import pythia.util
 
 """longitude/latitude"""
 
@@ -17,9 +15,8 @@ def _get_site_raster_value(dataset, band, site):
     return band[row, col]
 
 
-def peer(run, dryrun=False, sample=False, sample_size=1):
+def peer(run, sample=False, sample_size=1):
     rasters = pythia.util.get_rasters_dict(run)
-    sites = []
     if sample:
         sites = pythia.functions.xy_from_vector(run["sites"])[0:sample_size]
     else:
@@ -36,12 +33,12 @@ def peer(run, dryrun=False, sample=False, sample_size=1):
             band = ds.read(1)
             data.append([_get_site_raster_value(ds, band, site)
                          for site in sites])
-    peerless = list(filter(lambda x: x is not None, [readLayerByCell(
+    peerless = list(filter(lambda x: x is not None, [read_layer_by_cell(
         i, data, nodata, layers, sites) for i in range(len(sites))]))
     return peerless
 
 
-def readLayerByCell(idx, data, nodata, layers, sites):
+def read_layer_by_cell(idx, data, nodata, layers, sites):
     y, x = sites[idx]
     cell = {"lat": y, "lng": x}
     for i, c in enumerate(data):
@@ -57,7 +54,6 @@ def make_run_directory(rd):
 
 
 def get_rio_profile(f):
-    profile = None
     with rasterio.open(f) as source:
         profile = source.profile
     return profile

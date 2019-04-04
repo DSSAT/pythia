@@ -1,35 +1,41 @@
 import os
+import queue
 import shutil
 import threading
-import queue
+
+import pythia.functions
+import pythia.io
+import pythia.template
 import pythia.util
 
 q = queue.Queue()
 
 
 def build_context(run, ctx):
+    context = run.copy()
+    context = {**context, **ctx}
     for k, v in run.items():
         if "::" in str(v) and k != "sites":
             fn = v.split("::")[0]
             if fn != "raster":
-                res = getattr(pythia.functions, fn)(k, run, ctx)
-                ctx = {**ctx, **res}
-    return ctx
+                res = getattr(pythia.functions, fn)(k, run, context)
+                context = {**context, **res}
+    return context
 
 
 def compose_peerless(ctx):
     run, p, config, env = ctx
     context = build_context(run, p)
     y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
-    ctxOutputDir = os.path.join(config["workDir"], y, x)
-    pythia.io.make_run_directory(ctxOutputDir)
+    this_output_dir = os.path.join(config["workDir"], y, x)
+    pythia.io.make_run_directory(this_output_dir)
     if "weatherDir" in config:
         shutil.copy2(os.path.join(config["weatherDir"], context["wthFile"]), os.path.join(
-            ctxOutputDir, "{}.WTH".format(context["wsta"])))
+            this_output_dir, "{}.WTH".format(context["wsta"])))
     for soil in run["soils"]:
-        shutil.copy2(soil, ctxOutputDir)
+        shutil.copy2(soil, this_output_dir)
     xfile = pythia.template.render_template(env, run["template"], context)
-    with open(os.path.join(ctxOutputDir, run["template"]), "w") as f:
+    with open(os.path.join(this_output_dir, run["template"]), "w") as f:
         f.write(xfile)
 
 
