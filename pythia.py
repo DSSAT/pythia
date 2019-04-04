@@ -2,9 +2,9 @@ import logging
 import pprint
 
 import pythia.config
+import pythia.dssat
 import pythia.io
 import pythia.peerless
-import pythia.template
 
 logging.getLogger("pythia_app")
 logging.basicConfig(level=logging.INFO)
@@ -14,3 +14,4 @@ single_run = config["runs"][0]
 peerless = pythia.io.peer(single_run, config.get("sample", None))
 pythia.peerless.execute(single_run, peerless, config)
 pprint.pprint(config)
+pythia.dssat.execute(config)
