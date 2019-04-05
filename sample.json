@@ -20,13 +20,13 @@
         "wsta": "lookup_wth::SSUD::vector::data/shapes/unity_sites.shp::CellID",
         "ic_layers":"generate_ic_layers::$id_soil"
     },
-    "runs": [
-        {
-            "sname": "maize-q1",
-            "harvestArea": "raster::data/rasters/unity_spam_harvest_maize.tif"
-        }
-    ],
     "dssat": {
         "executable": "~/dssat/dscsm047"
-    }
+    },
+    "runs": [
+        {
+            "name": "sorghum",
+            "harvestArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif"
+        }
+    ]
 }
