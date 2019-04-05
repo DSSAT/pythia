@@ -1,5 +1,6 @@
 import logging
 
+import pythia.analytics
 import pythia.config
 import pythia.dssat
 import pythia.io
@@ -29,10 +30,17 @@ if __name__ == "__main__":
             import shutil
             shutil.rmtree(config["workDir"])
         for run in config.get("runs", []):
-            if args.all or args.setup:
+            peerless = []
+            if args.all or args.setup or args.analyze:
                 peerless = pythia.io.peer(run, config.get("sample", None))
+            if args.all or args.setup:
+                print("Setting up DSSAT runs...", end=" ")
                 pythia.peerless.execute(run, peerless, config)
+                print("DONE")
             if args.all or args.run_dssat:
+                print("Running gridded DSSAT", end=" ")
                 pythia.dssat.execute(config)
-            if args.analyze:
-                print("Analysis module is still being hooked up")
+                print("DONE")
+            if args.all or args.analyze:
+                #pythia.analytics.execute(run, peerless, config)
+                print("Analytics are not yet supported")

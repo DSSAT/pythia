@@ -20,13 +20,28 @@
         "wsta": "lookup_wth::SSUD::vector::data/shapes/unity_sites.shp::CellID",
         "ic_layers":"generate_ic_layers::$id_soil"
     },
-    "runs": [
-        {
-            "sname": "maize-q1",
-            "harvestArea": "raster::data/rasters/unity_spam_harvest_maize.tif"
-        }
-    ],
     "dssat": {
         "executable": "~/dssat/dscsm047"
-    }
+    },
+    "analysis": {
+        "default_analysis" : {
+            "timeseries": {"Harvest Date": "HDAT"},
+            "timestep": "Y",
+            "processing": [
+                {"Production (kg)": "HWAM: scale during collection by default"},
+                {"Production (t)": "Production (kg):scale before output by 0.001 rounded"},
+                {"Harvested Area (ha)": "SCALE: round before output"},
+                {"Production (t)": "Production (t): drop0 before output"}
+            ],
+            "output": ["Production (t)", "Harvested Area (ha)"]
+        }
+    },
+    "runs": [
+        {
+            "name": "sorghum",
+            "harvestArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif",
+            "scale_by": "$harvestArea",
+            "analysis_outfile": "outputs/unity/sorghum_yearly.csv"
+        }
+    ]
 }
