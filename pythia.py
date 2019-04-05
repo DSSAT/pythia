@@ -17,12 +17,17 @@ if __name__ == "__main__":
     parser.add_argument("--setup", action="store_true")
     parser.add_argument("--run-dssat", action="store_true")
     parser.add_argument("--analyze", action="store_true")
+    parser.add_argument("--clean-work-dir", action="store_true")
     args = parser.parse_args()
 
     if not args.config:
         parser.print_help()
     else:
         config = pythia.config.load_config(args.config)
+        if args.clean_work_dir:
+            print("Cleaning work directory")
+            import shutil
+            shutil.rmtree(config["workDir"])
         for run in config.get("runs", []):
             if args.all or args.setup:
                 peerless = pythia.io.peer(run, config.get("sample", None))
