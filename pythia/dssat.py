@@ -8,10 +8,10 @@ from multiprocessing.pool import ThreadPool
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
     command_string = "cd {} && {} A {}".format(details['dir'], config['dssat']['executable'], details['file'])
-    logging.debug("Starting DSSAT for {}".format(details["dir"]))
+    print(".", end="")
     dssat = subprocess.Popen(command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = dssat.communicate()
-    logging.debug("Finished {}".format(details["dir"]))
+    print("+", end="")
     return details['dir'], details['file'], out, err, dssat.returncode
 
 
@@ -31,5 +31,6 @@ def execute(config):
         results.append(pool.apply_async(_run_dssat, (details, config)))
     pool.close()
     pool.join()
+    print()
     for result in results:
         print(result.get())

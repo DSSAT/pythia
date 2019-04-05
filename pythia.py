@@ -6,7 +6,7 @@ import pythia.io
 import pythia.peerless
 
 logging.getLogger("pythia_app")
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     import argparse
