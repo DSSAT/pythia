@@ -27,7 +27,7 @@ def compose_peerless(ctx):
     run, p, config, env = ctx
     context = build_context(run, p)
     y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
-    this_output_dir = os.path.join(config["workDir"], y, x)
+    this_output_dir = os.path.join(context["workDir"], y, x)
     pythia.io.make_run_directory(this_output_dir)
     if "weatherDir" in config:
         shutil.copy2(os.path.join(config["weatherDir"], context["wthFile"]), os.path.join(
