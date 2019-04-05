@@ -1,6 +1,7 @@
 import itertools
 import json
 import logging
+import os
 
 import pythia.functions
 import pythia.io
@@ -66,6 +67,12 @@ def _merge_default(default, run):
     return {**dest, **src}
 
 
+def _set_run_workdir(run, root, idx):
+    run_dir = os.path.join(root, "{}".format(run.get("name", "run_{}".format(idx))))
+    return {**run, **{"workDir": run_dir}}
+
+
 def _merge_runs(config):
     runs = [_merge_default(config["default_setup"], r) for r in config["runs"]]
+    runs = [_set_run_workdir(r, config.get("workDir", "."), i) for (i, r) in enumerate(runs)]
     return runs

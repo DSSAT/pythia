@@ -1,13 +1,11 @@
 import calendar
-import datetime
-from numbers import Number
 import os
+import pprint
 import re
+from numbers import Number
 
-import numpy as np
 import pandas as pd
 import rasterio
-import pprint
 
 # GLOBALS EWWWW
 hooks = [
@@ -18,18 +16,7 @@ hooks = [
     "before output",
 ]
 
-
-def loadRaster(raster, dataOnly=True):
-    data = None
-    with rasterio.open(raster) as r:
-        if dataOnly:
-            data = r.read(1)
-        else:
-            data = (r.read(1), r.height, r.width)
-    return data
-
-
-def dropRowWithVal(df, col, val, inplace=False):
+def _drop_row_with_val(df, col, val, inplace=False):
     if not inplace:
         if col in list(df):
             return df[df[col] != val]
@@ -75,10 +62,10 @@ def _readFile(df, idx, items, procs=[], default_filters=True, debug=False):
     lim.set_index(idx, inplace=True)
     # default filters
     if default_filters:
-        lim = dropRowWithVal(lim, "HWAM", -99)
-        lim = dropRowWithVal(lim, "PDAT", -99)
-        lim = dropRowWithVal(lim, "ADAT", -99)
-        lim = dropRowWithVal(lim, "HDAT", -99)
+        lim = _drop_row_with_val(lim, "HWAM", -99)
+        lim = _drop_row_with_val(lim, "PDAT", -99)
+        lim = _drop_row_with_val(lim, "ADAT", -99)
+        lim = _drop_row_with_val(lim, "HDAT", -99)
     return lim
 
 
@@ -168,7 +155,7 @@ def applyMiscProcesses(df, procs, debug=False):
         if proc["verb"] == "round":
             df[proc["dest"]] = round(df[proc["src"]]).astype(int)
         if proc["verb"] == "drop0":
-            dropRowWithVal(df, proc["src"], 0, True)
+            _drop_row_with_val(df, proc["src"], 0, True)
 
 
 def applyIndexProcesses(df, procs, debug=False):
@@ -213,8 +200,8 @@ def accumulate(df, acc=None):
     return acc
 
 
-def init(scale_tiff, wd="."):
-    directories = next(os.walk(wd))[1]
+def init(scale_tiff, workDir="."):
+    directories = next(os.walk(workDir))[1]
     scale = loadRaster(scale_tiff)
     scale_factors = [
         scale[c[0]][c[1]] for c in [tuple(map(int, d.split("_"))) for d in directories]
@@ -224,20 +211,20 @@ def init(scale_tiff, wd="."):
 
 
 def collect(
-    directories,
-    scale_factors,
-    cumulative,
-    index,
-    cols,
-    procs=[],
-    wd=".",
-    target="summary.csv",
-    debug=False,
+        directories,
+        scale_factors,
+        cumulative,
+        index,
+        cols,
+        procs=[],
+        workDir=".",
+        target="summary.csv",
+        debug=False,
 ):
     acc = None
     for idx, d in enumerate(directories):
         summary = loadSummary(
-            os.path.join(wd, d, target),
+            os.path.join(workDir, d, target),
             index,
             cols,
             procs["during indexing"],
@@ -249,78 +236,6 @@ def collect(
         applyAverageProcesses(summary, procs["during collection"])
         acc = accumulate(summary, acc)
     return acc
-
-
-def collectWeather(
-    cellid_tiff, scale_tiff, index, cols, profile={}, wd=".", debug=False
-):
-    acc = None
-    (cellid, _r, _c) = loadRaster(cellid_tiff, False)
-    (scale, r, c) = loadRaster(scale_tiff, False)
-    if not _r == r and _c == c:
-        print("ERROR: TIFF dimension mismatch.")
-        return None
-    # First pass
-    cellids = []
-    sf = []
-    for ridx in range(0, r):
-        for cidx in range(0, c):
-            if cellid[ridx, cidx] > 0 and scale[ridx, cidx] > 0:
-                cellids.append(cellid[ridx, cidx])
-                sf.append(scale[ridx, cidx])
-    cusum = sum(sf)
-    one_debug = True
-    for i, cell in enumerate(cellids):
-        wf = os.path.join(wd, "{}.WTH".format(str(cell)))
-        #        if debug:
-        #            print("Loading {}".format(wf))
-        weather = loadDSSATFile(
-            wf, index, cols, profile["procs"]["during indexing"], debug=one_debug
-        )
-        one_debug = False
-        window = None
-        if not profile["start_date"] and not profile["end_date"]:
-            window = weather
-        elif profile["mode"] == "timeseries forecasting":
-            window = applyForecasting(
-                weather,
-                profile["start_date"],
-                profile["end_date"],
-                profile["forecast_last_real_date"],
-                profile["forecast_start_year"],
-                profile["forecast_end_year"],
-            )
-        else:
-            window = weather.loc[profile["start_date"] : profile["end_date"]].copy()
-        window["SCALE"] = sf[i]
-        window["CUSUM"] = cusum
-        applyScaleProcesses(window, profile["procs"]["during collection"])
-        applyAverageProcesses(window, profile["procs"]["during collection"])
-        acc = accumulate(window, acc)
-    return acc
-
-
-def applyForecasting(
-    df, start_date, end_date, cutoff_date, forecast_start_year, forecast_end_year
-):
-    acc = None
-    real = df[start_date:cutoff_date].copy()
-    for year in range(forecast_start_year, forecast_end_year):
-        fsd = "{}-{}".format(year, cutoff_date[5:])
-        fed = "{}-12-31".format(year)
-        out = real.copy()
-        target = df[fsd:fed].copy()
-        if not calendar.isleap(year):
-            target = target.iloc[1:]
-        out.index = out.index.strftime("%Y%j")
-        out.index = out.index.str.slice_replace(start=0, stop=4, repl="{}".format(year))
-        target.index = target.index.strftime("%Y%j")
-        acc = accumulate(out, acc)
-        acc = accumulate(target, acc)
-    acc.index = pd.to_datetime(acc.index, format="%Y%j", errors="coerce")
-    acc.sort_index(inplace=True)
-    return acc
-
 
 def aggregate(df, procs, timestep="Y", index_name=None, debug=False):
     applyScaleProcesses(df, procs["before aggregation"], debug)
@@ -334,15 +249,15 @@ def aggregate(df, procs, timestep="Y", index_name=None, debug=False):
     res["ZSIZE"] = z.size()
     res["CUSUM"] = cusum
     res.dropna(inplace=True)
-    res = dropRowWithVal(res, "ZSIZE", 0)
-    res = dropRowWithVal(res, "SCALE", 0)
+    res = _drop_row_with_val(res, "ZSIZE", 0)
+    res = _drop_row_with_val(res, "SCALE", 0)
     applyScaleProcesses(res, procs["after aggregation"], debug)
     applyAverageProcesses(res, procs["after aggregation"], debug)
     res.index.name = index_name
     return res
 
 
-def output(df, procs, outputs=None, outfile=None, wd=".", debug=False):
+def output(df, procs, outputs=None, outfile=None, workDir=".", debug=False):
     applyScaleProcesses(df, procs["before output"], debug)
     applyAverageProcesses(df, procs["before output"], debug)
     applyMiscProcesses(df, procs["before output"], debug)
@@ -353,17 +268,17 @@ def output(df, procs, outputs=None, outfile=None, wd=".", debug=False):
     if outfile is None:
         return res
     else:
-        res.to_csv(os.path.join(wd, outfile))
+        res.to_csv(os.path.join(workDir, outfile))
         return res
 
 
 def runProfiles(
-    profiles,
-    storeOutputs=False,
-    breakOnFail=True,
-    printOutputs=False,
-    miniProgress=False,
-    debug=False,
+        profiles,
+        storeOutputs=False,
+        breakOnFailure=True,
+        printOutputs=False,
+        miniProgress=False,
+        debug=False,
 ):
     outs = []
     for run, profile in enumerate(profiles):
@@ -398,7 +313,7 @@ def runProfile(profile, debug=False):
     if debug:
         pprint.pprint(_profile)
     if not _profile:
-        print("There was a profile running this profile: {}".format(profile))
+        print("There was a problem running this profile: {}".format(profile))
         return None
     if _profile["timeseries"]:
         index_name = next(iter(_profile["timeseries"]))
@@ -408,18 +323,10 @@ def runProfile(profile, debug=False):
         index = None
         index_name = ""
 
-    # Probably bad code
-    sources = [
-        p["src"]
-        for p in _profile["procs"]["during indexing"]
-        if not re.match("^!.+!$", p["src"])
-    ]
+    # Probably bad code￿￿￿
+    sources = [p["src"] for p in _profile["procs"]["during indexing"] if not re.match("^!.+!$", p["src"])]
     sources += [p["src"] for p in _profile["procs"]["during collection"]]
-    dests = [
-        p["dest"]
-        for p in _profile["procs"]["during indexing"]
-        if not re.match("^!.+!$", p["dest"])
-    ]
+    dests = [p["dest"] for p in _profile["procs"]["during indexing"] if not re.match("^!.+!$", p["dest"])]
     dests += [p["dest"] for p in _profile["procs"]["during collection"]]
     to_collect = list(set(sources).difference(dests))
     if debug:
@@ -428,31 +335,18 @@ def runProfile(profile, debug=False):
         print("No variables selected from outputs")
         return False
 
-    collected = None
-    if _profile["mode"] == "default":
-        (d, sf, c) = init(_profile["scale_tiff"], _profile["wd"])
-        collected = collect(
+    (d, sf, c) = init(_profile["scale_tiff"], _profile["workDir"])
+    collected = collect(
             d,
             sf,
             c,
             index,
             to_collect,
             _profile["procs"],
-            _profile["wd"],
+            _profile["workDir"],
             _profile["target"],
             debug,
         )
-    else:
-        collected = collectWeather(
-            _profile["weather_tiff"],
-            _profile["scale_tiff"],
-            index,
-            to_collect,
-            profile=_profile,
-            wd=_profile["wd"],
-            debug=debug,
-        )
-
     if debug:
         print("== COLLECTED ==")
         pprint.pprint(collected.sort_index())
@@ -467,7 +361,7 @@ def runProfile(profile, debug=False):
         _profile["procs"],
         _profile["output"],
         _profile["outfile"],
-        _profile["wd"],
+        _profile["workDir"],
         debug,
     )
     if debug:
@@ -478,7 +372,7 @@ def runProfile(profile, debug=False):
 
 def validateProfile(profile, debug=False):
     default_profile = {
-        "wd": ".",
+        "workdDir": ".",
         "timestep": "Y",
         "timeseries": None,
         "output": None,
@@ -653,7 +547,7 @@ def parseProcesses(processes, debug=False):
         dest = next(iter(process_dict))
         proc = {"dest": dest}
         process = process_dict[dest]
-        if not ":" in process:
+        if ":" not in process:
             print("Invalid process string: Dropping process {}".format(process))
             continue
         (src, s) = process.split(":", maxsplit=1)
@@ -666,124 +560,11 @@ def parseProcesses(processes, debug=False):
             addToHookVisiblity(hook_visible, p["hook"], src)
             addToHookVisiblity(hook_visible, p["hook"], dest)
     if valid_process:
-        return (procs, hook_visible)
+        return procs, hook_visible
     else:
         return None
 
 
-default_profile = {
-    "timeseries": {"Harvest Date (Proxy Year)": "HDAT"},
-    "timestep": "Y",
-    "processing": [
-        {"IDXYEAR": "RUNNO: offset during indexing by -34"},
-        {"IDXOFFSET": "IDXYEAR: scale during indexing by 1000"},
-        {"!HDAT!": "!HDAT!: offset during indexing by IDXOFFSET"},
-        {"Production (kg)": "HWAM: scale during collection by default"},
-        {"Production (t)": "Production (kg):scale before output by 0.001 rounded"},
-        {"Average Yield (kg/ha)": "Production (kg): avg during collection by default"},
-        {"Average Yield (kg/ha)": "Average Yield (kg/ha): round before output"},
-        {"Harvested Area (ha)": "SCALE: round before output"},
-        {"Production (t)": "Production (t): drop0 before output"},
-    ],
-    "output": ["Production (t)", "Harvested Area (ha)"],
-}
-
-run_params = [
-     {
-        "wd": "/data/organize/out/nbg_maiz/forecast",
-        "scale_tiff": "/data/organize/rasters/nbg_harvest_maiz.tif",
-        "outfile": "/data/organize/csv/nbg_maiz_forecast_yearly.csv",
-    },
-    {
-        "wd": "/data/organize/out/nbg_sorg/forecast",
-        "scale_tiff": "/data/organize/rasters/nbg_harvest_sorg.tif",
-        "outfile": "/data/organize/csv/nbg_sorg_forecast_yearly.csv",
-    },
-    {
-        "wd": "/data/organize/out/unity_maiz/forecast",
-        "scale_tiff": "/data/organize/rasters/unity_harvest_maiz.tif",
-        "outfile": "/data/organize/csv/unity_maiz_forecast_yearly.csv",
-    },
-    {
-        "wd": "/data/organize/out/unity_sorg/forecast",
-        "scale_tiff": "/data/organize/rasters/unity_harvest_sorg.tif",
-        "outfile": "/data/organize/csv/unity_sorg_forecast_yearly.csv",
-    },
-    # {
-    #     "wd": "/data/organize/out/nbg_maiz/delta",
-    #     "scale_tiff": "/data/organize/rasters/nbg_harvest_maiz.tif",
-    #     "outfile": "/data/organize/csv/nbg_maiz_delta_daily.csv",
-    # },
-    # {
-    #     "wd": "/data/organize/out/nbg_sorg/delta",
-    #     "scale_tiff": "/data/organize/rasters/nbg_harvest_sorg.tif",
-    #     "outfile": "/data/organize/csv/nbg_sorg_delta_daily.csv",
-    # },
-    # {
-    #     "wd": "/data/organize/out/unity_maiz/delta",
-    #     "scale_tiff": "/data/organize/rasters/unity_harvest_maiz.tif",
-    #     "outfile": "/data/organize/csv/unity_maiz_delta_daily.csv",
-    # },
-    # {
-    #     "wd": "/data/organize/out/unity_sorg/delta",
-    #     "scale_tiff": "/data/organize/rasters/unity_harvest_sorg.tif",
-    #     "outfile": "/data/organize/csv/unity_sorg_delta_daily.csv",
-    # },
-]
-
-run_profiles = [{**default_profile, **rp} for rp in run_params]
-
-# Weather file processing
-weather_profile = {
-     "mode": "historical weather",
-     "start_year": 2017,
-     "run_years": 1,
-     #"end_date": "2017-04-30",
-    #"mode": "timeseries forecasting",
-    #"start_year": 2017,
-    #"run_years": 1,
-    #"forecast_start_year": 1984,
-    #"forecast_last_real_date": "2017-04-30",
-    "timeseries": {"Date": "@DATE"},
-    "timestep": "M",
-    "processing": [
-        {"Scaled Rainfall (mm*ha)": "RAIN: scale during collection by default"},
-        {"Area (ha)": "SCALE: rename"},
-        {
-            "Average Total Daily Rainfall (mm)": "Scaled Rainfall (mm*ha): avg after aggregation by default"
-        },
-        # {"Average Total Daily Rainfall (mm)": "Average Total Daily Rainfall (mm): scale before output by 0.4"}, 
-    ],
-    "output": ["Average Total Daily Rainfall (mm)"],
-}
-
-weather_params = [
-     {
-        "wd": "/data/organize/weather/unity",
-        "scale_tiff": "/data/organize/rasters/unity_harvest_maiz.tif",
-        "weather_tiff": "/data/organize/rasters/unity_cellid.tif",
-        "outfile": "/data/organize/csv/weather/unity_maiz_2017_weather_monthly.csv",
-    },
-    {
-        "wd": "/data/organize/weather/unity",
-        "scale_tiff": "/data/organize/rasters/unity_harvest_sorg.tif",
-        "weather_tiff": "/data/organize/rasters/unity_cellid.tif",
-        "outfile": "/data/organize/csv/weather/unity_sorg_2017_weather_monthly.csv",
-    },
-    {
-        "wd": "/data/organize/weather/NBG",
-        "scale_tiff": "/data/organize/rasters/nbg_harvest_maiz.tif",
-        "weather_tiff": "/data/organize/rasters/nbg_cellid.tif",
-         "outfile": "/data/organize/csv/weather/nbg_maiz_2017_weather_monthly.csv",
-    },
-    {
-        "wd": "/data/organize/weather/NBG",
-        "scale_tiff": "/data/organize/rasters/nbg_harvest_sorg.tif",
-        "weather_tiff": "/data/organize/rasters/nbg_cellid.tif",
-        "outfile": "/data/organize/csv/weather/nbg_sorg_2017_weather_monthly.csv",
-    },
-]
-
-weather_profiles = [{**weather_profile, **wp} for wp in weather_params]
-# Here we go
-runProfiles(weather_profiles, miniProgress=True)
+def execute(run, peerless, config):
+    data = {**run, **peerless}
+    pprint.pprint(data)

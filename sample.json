@@ -1,13 +1,14 @@
 {
     "name": "example",
-    "workDir": "example/unity",
+    "workDir": "work/unity",
     "templateDir": "data/templates",
     "weatherDir":"data/weathers",
     "threads": 8,
+    "sample": 10,
     "default_setup": {
         "template": "SORG8433.SNX",
         "sites": "xy_from_vector::data/shapes/unity_sites.shp",
-        "soils": ["data/base/HC.SOL"],
+        "soilFiles": ["data/base/HC.SOL"],
         "startYear": 1984,
         "initialN": 5,
         "fractionalAW": 0.25,
@@ -19,14 +20,28 @@
         "wsta": "lookup_wth::SSUD::vector::data/shapes/unity_sites.shp::CellID",
         "ic_layers":"generate_ic_layers::$id_soil"
     },
+    "dssat": {
+        "executable": "~/dssat/dscsm047"
+    },
+    "analysis": {
+        "default_analysis" : {
+            "timeseries": {"Harvest Date": "HDAT"},
+            "timestep": "Y",
+            "processing": [
+                {"Production (kg)": "HWAM: scale during collection by default"},
+                {"Production (t)": "Production (kg):scale before output by 0.001 rounded"},
+                {"Harvested Area (ha)": "SCALE: round before output"},
+                {"Production (t)": "Production (t): drop0 before output"}
+            ],
+            "output": ["Production (t)", "Harvested Area (ha)"]
+        }
+    },
     "runs": [
         {
-            "sname": "maize-q1",
-            "harvestArea": "raster::data/rasters/unity_spam_harvest_maize.tif"
-        },
-        {
-            "sname": "sorg-q1",
-            "harvestedArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif"
+            "name": "sorghum",
+            "harvestArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif",
+            "scale_by": "$harvestArea",
+            "analysis_outfile": "outputs/unity/sorghum_yearly.csv"
         }
     ]
 }

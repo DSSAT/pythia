@@ -27,12 +27,12 @@ def compose_peerless(ctx):
     run, p, config, env = ctx
     context = build_context(run, p)
     y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
-    this_output_dir = os.path.join(config["workDir"], y, x)
+    this_output_dir = os.path.join(context["workDir"], y, x)
     pythia.io.make_run_directory(this_output_dir)
     if "weatherDir" in config:
         shutil.copy2(os.path.join(config["weatherDir"], context["wthFile"]), os.path.join(
             this_output_dir, "{}.WTH".format(context["wsta"])))
-    for soil in run["soils"]:
+    for soil in run["soilFiles"]:
         shutil.copy2(soil, this_output_dir)
     xfile = pythia.template.render_template(env, run["template"], context)
     with open(os.path.join(this_output_dir, run["template"]), "w") as f:
@@ -48,7 +48,7 @@ def oracle():
         q.task_done()
 
 
-def run_peerless(run, peerless, config):
+def execute(run, peerless, config):
     threads = []
     for i in range(config["threads"]):
         t = threading.Thread(target=oracle)
