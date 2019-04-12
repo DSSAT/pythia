@@ -1,4 +1,7 @@
 import datetime
+import itertools
+
+import pythia.util
 
 
 def generate_days(start_offset, days_between, number_of_dates):
@@ -6,17 +9,18 @@ def generate_days(start_offset, days_between, number_of_dates):
 
 
 # def generate_pdate(k, run, context):
-def generate_pdate(year, start_offset, days_between, number_of_dates):
+def pdate_factors(year, start_offset, days_between, number_of_dates):
     two_digit_year = str(year)[2:]
     g = generate_days(start_offset, days_between, number_of_dates)
     return ["{}{}".format(two_digit_year, "{:>03d}".format(d)) for d in g]
 
 
-# def generate_hdate
-def generate_hdate(pdates, start_offset, days_between, number_of_dates):
+def hdate_factors(pdates, start_offset, days_between, number_of_dates):
     g = generate_days(start_offset, days_between, number_of_dates)
-    return [datetime.timedelta(days=d) for d in g]
+    offsets = (datetime.timedelta(days=d) for d in g)
+    return list(dict.fromkeys([pythia.util.to_julian_date(pythia.util.from_julian_date(p) + h) for p, h in
+                               itertools.product(pdates, offsets)]))
 
 
-def generate_factors(run, **kwargs):
-    pass
+def generate_factor_list(pdates_len, hdates_offsets_len):
+    return [(pf+1, pf+hf+1) for pf,hf in itertools.product(range(pdates_len), range(hdates_offsets_len))]

@@ -1,21 +1,21 @@
 {
-    "name": "example",
-    "workDir": "work/unity",
+    "name": "IITA_Casava",
+    "workDir": "work/iita",
     "templateDir": "data/templates",
     "weatherDir":"data/weathers",
     "threads": 8,
-    "sample": 10,
+    "sample": 3,
     "default_setup": {
-        "template": "SORG8433.SNX",
+        "template": "NGSP0000.CSX",
         "sites": "xy_from_vector::data/shapes/unity_sites.shp",
         "soilFiles": ["data/base/HC.SOL"],
         "startYear": 1984,
+        "nyers": 32,
         "initialN": 5,
         "fractionalAW": 0.25,
         "icrt": 5,
         "icres": 10,
         "icren": 0.8,
-        "autoPlant": "auto_planting_window::raster::data/rasters/unity_planting_month.tif::1::45",
         "id_soil": "lookup_hc27::raster::data/rasters/unity_hc27.tif",
         "wsta": "lookup_wth::SSUD::vector::data/shapes/unity_sites.shp::CellID",
         "ic_layers":"generate_ic_layers::$id_soil"
@@ -38,7 +38,7 @@
     },
     "runs": [
         {
-            "name": "sorghum",
+            "name": "cassava",
             "harvestArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif",
             "scale_by": "$harvestArea",
             "analysis_outfile": "outputs/unity/sorghum_yearly.csv"

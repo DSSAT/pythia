@@ -42,5 +42,5 @@ if __name__ == "__main__":
                 pythia.dssat.execute(config)
                 print("DONE")
             if args.all or args.analyze:
-                #pythia.analytics.execute(run, peerless, config)
+                # pythia.analytics.execute(run, peerless, config)
                 print("Analytics are not yet supported")
