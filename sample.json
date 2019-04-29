@@ -2,13 +2,11 @@
     "name": "IITA_Casava",
     "workDir": "work/iita",
     "templateDir": "data/templates",
-    "weatherDir":"data/weathers",
     "threads": 8,
-    "sample": 3,
+    "sample": 30,
     "default_setup": {
         "template": "NGSP0000.CSX",
-        "sites": "xy_from_vector::data/shapes/unity_sites.shp",
-        "soilFiles": ["data/base/HC.SOL"],
+        "sites": "xy_from_vector::data/shapes/Nigeria_shapefile.shp",
         "startYear": 1984,
         "nyers": 32,
         "initialN": 5,
@@ -16,12 +14,13 @@
         "icrt": 5,
         "icres": 10,
         "icren": 0.8,
-        "id_soil": "lookup_hc27::raster::data/rasters/unity_hc27.tif",
-        "wsta": "lookup_wth::SSUD::vector::data/shapes/unity_sites.shp::CellID",
+        "id_soil": "lookup_ghr::raster::data/rasters/iita_nigeria_ghr.tif",
         "ic_layers":"generate_ic_layers::$id_soil"
     },
     "dssat": {
-        "executable": "~/dssat/dscsm047"
+        "executable": "~/dssat/dscsm047",
+        "mode": "B",
+        "batchFile":"PIXEL.v47"
     },
     "analysis": {
         "default_analysis" : {
@@ -39,8 +38,6 @@
     "runs": [
         {
             "name": "cassava",
-            "harvestArea": "raster::data/rasters/unity_spam_harvest_sorghum.tif",
-            "scale_by": "$harvestArea",
             "analysis_outfile": "outputs/unity/sorghum_yearly.csv"
         }
     ]

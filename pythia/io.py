@@ -35,6 +35,10 @@ def peer(run, sample_size=None):
     return peerless[:sample_size]
 
 
+def collect_high_res_soil(run):
+    pass
+
+
 def read_layer_by_cell(idx, data, nodata, layers, sites):
     y, x = sites[idx]
     cell = {"lat": y, "lng": x}

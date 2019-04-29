@@ -1,7 +1,6 @@
 import os
 import queue
 import shutil
-import math
 import threading
 
 import pythia.functions
@@ -40,7 +39,9 @@ def iita_build_treatments(context):
     hdates = iita.hdate_factors(pdates, 293, 7, 23)
     context["pdates"] = pdates
     context["hdates"] = hdates
-    context["factors"] = [{"tname":"blah", "mp":pf, "mh":hf} for pf,hf in iita.generate_factor_list(52, 23)]
+    context["factors"] = [{"tname": "iita_p{}_h{}".format(
+        pdates[pf-1], hdates[hf-1]), "mp":pf, "mh":hf}
+        for pf, hf in iita.generate_factor_list(52, 23)]
     return context
 
 
@@ -55,15 +56,27 @@ def compose_peerless(ctx):
     if "weatherDir" in config:
         shutil.copy2(os.path.join(config["weatherDir"], context["wthFile"]), os.path.join(
             this_output_dir, "{}.WTH".format(context["wsta"])))
-    for soil in run["soilFiles"]:
+    for soil in context["soilFiles"]:
         shutil.copy2(soil, this_output_dir)
     context = iita_build_treatments(context)
     for out_suffix, split in enumerate(split_levels(context["factors"], 99)):
         context["treatments"] = split
         xfile = pythia.template.render_template(env, run["template"], context)
-        with open(os.path.join(this_output_dir, "NGSP00{:>02d}.CSX".format(out_suffix)), "w") as f:
+        with open(os.path.join(this_output_dir,
+                               "NGSP00{:>02d}.CSX".format(out_suffix)), "w") as f:
             f.write(xfile)
     # Write the batch file
+    if config["dssat"].get("mode", "A") == "B":
+        with open(os.path.join(this_output_dir, config["dssat"].get(
+          "batchFile", "DSSBATCH.v47")), "w") as f:
+            f.write("$BATCH(PYTHIA)\n")
+            f.write("@FILEX                                                                                        TRTNO     RP     SQ     OP     CO\n")
+            for out_suffix, treatments in enumerate(split_levels(
+                  context["factors"], 99)):
+                for trtno, _ in enumerate(treatments):
+                    filename = "NGSP00{:>02d}.CSX".format(out_suffix)
+                    f.write("{:<94s}{:>5d}      1      0      0      0\n".format(
+                        filename, trtno+1))
 
 
 def oracle():

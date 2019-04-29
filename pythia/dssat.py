@@ -7,7 +7,7 @@ from multiprocessing.pool import ThreadPool
 
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
-    command_string = "cd {} && {} A {}".format(details['dir'], config['dssat']['executable'], details['file'])
+    command_string = "cd {} && {} {} {}".format(details['dir'], config['dssat']['executable'], config['dssat'].get('mode', 'A'), details['file'])
     print(".", end="")
     dssat = subprocess.Popen(command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = dssat.communicate()
@@ -18,8 +18,13 @@ def _run_dssat(details, config):
 def _generate_run_list(config):
     for root, _, files in os.walk(config.get("workDir", "."), topdown=False):
         for name in files:
-            if name.upper().endswith("X"):
-                yield {"dir": root, "file": name}
+            dssat_mode = config['dssat'].get("mode", "A")
+            if dssat_mode("A"):
+                if name.upper().endswith("X"):
+                    yield {"dir": root, "file": name}
+            else:
+                if name == config["dssat"]["batchFile"]:
+                    yield {"dir": root, "file": name}
 
 
 def execute(config):
