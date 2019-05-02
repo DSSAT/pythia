@@ -16,6 +16,7 @@ hooks = [
     "before output",
 ]
 
+
 def _drop_row_with_val(df, col, val, inplace=False):
     if not inplace:
         if col in list(df):
@@ -47,9 +48,9 @@ def autoDate(df):
     cols = df.keys()
     for col in cols:
         if isDateCol(col):
-            df[col] = pd.to_datetime(
-                df[col].astype(str), format="%Y%j", errors="coerce"
-            )
+            df[col] = pd.to_datetime(df[col].astype(str),
+                                     format="%Y%j",
+                                     errors="coerce")
     df.dropna(inplace=True)
 
 
@@ -74,7 +75,13 @@ def loadSummary(f, idx, items, procs=[], default_filters=True, debug=False):
     return _readFile(df, idx, items, procs, default_filters, debug)
 
 
-def loadDSSATFile(f, idx, items, procs=[], start=3, default_filters=True, debug=False):
+def loadDSSATFile(f,
+                  idx,
+                  items,
+                  procs=[],
+                  start=3,
+                  default_filters=True,
+                  debug=False):
     df = pd.read_table(f, delim_whitespace=True, index_col=False, header=start)
     return _readFile(df, idx, items, procs, default_filters, debug)
 
@@ -111,9 +118,8 @@ def applyScaleProcesses(df, procs, debug=False):
                 if proc["factor"] in list(df):
                     factor = df[proc["factor"]]
                 else:
-                    print(
-                        "ERROR: {} is not a valid scale factor".format(proc["factor"])
-                    )
+                    print("ERROR: {} is not a valid scale factor".format(
+                        proc["factor"]))
                     return
             applyScale(df, proc["src"], proc["dest"], factor, rounded)
 
@@ -139,7 +145,8 @@ def applyAverageProcesses(df, procs, debug=False):
                 if proc["factor"] in list(df):
                     divisor = df[proc["factor"]]
                 else:
-                    print("ERROR: {} is not a valid divisor".format(proc["factor"]))
+                    print("ERROR: {} is not a valid divisor".format(
+                        proc["factor"]))
                     return
             applyAverage(df, proc["src"], proc["dest"], divisor, rounded)
 
@@ -174,7 +181,8 @@ def applyIndexProcesses(df, procs, debug=False):
                 if proc["factor"] in list(df):
                     offset = df[proc["factor"]]
                 else:
-                    print("ERROR: {} is not a valid offset".format(proc["factor"]))
+                    print("ERROR: {} is not a valid offset".format(
+                        proc["factor"]))
                     continue
             applyOffset(df, src, dest, offset)
         if proc["verb"] == "scale":
@@ -185,9 +193,8 @@ def applyIndexProcesses(df, procs, debug=False):
                 if proc["factor"] in list(df):
                     factor = df[proc["factor"]]
                 else:
-                    print(
-                        "ERROR: {} is not a valid scale factor".format(proc["factor"])
-                    )
+                    print("ERROR: {} is not a valid scale factor".format(
+                        proc["factor"]))
                     continue
             applyScale(df, src, dest, factor, rounded)
 
@@ -204,7 +211,8 @@ def init(scale_tiff, workDir="."):
     directories = next(os.walk(workDir))[1]
     scale = loadRaster(scale_tiff)
     scale_factors = [
-        scale[c[0]][c[1]] for c in [tuple(map(int, d.split("_"))) for d in directories]
+        scale[c[0]][c[1]]
+        for c in [tuple(map(int, d.split("_"))) for d in directories]
     ]
     cumulative = sum(scale_factors)
     return (directories, scale_factors, cumulative)
@@ -236,6 +244,7 @@ def collect(
         applyAverageProcesses(summary, procs["during collection"])
         acc = accumulate(summary, acc)
     return acc
+
 
 def aggregate(df, procs, timestep="Y", index_name=None, debug=False):
     applyScaleProcesses(df, procs["before aggregation"], debug)
@@ -324,9 +333,15 @@ def runProfile(profile, debug=False):
         index_name = ""
 
     # Probably bad code￿￿￿
-    sources = [p["src"] for p in _profile["procs"]["during indexing"] if not re.match("^!.+!$", p["src"])]
+    sources = [
+        p["src"] for p in _profile["procs"]["during indexing"]
+        if not re.match("^!.+!$", p["src"])
+    ]
     sources += [p["src"] for p in _profile["procs"]["during collection"]]
-    dests = [p["dest"] for p in _profile["procs"]["during indexing"] if not re.match("^!.+!$", p["dest"])]
+    dests = [
+        p["dest"] for p in _profile["procs"]["during indexing"]
+        if not re.match("^!.+!$", p["dest"])
+    ]
     dests += [p["dest"] for p in _profile["procs"]["during collection"]]
     to_collect = list(set(sources).difference(dests))
     if debug:
@@ -337,22 +352,21 @@ def runProfile(profile, debug=False):
 
     (d, sf, c) = init(_profile["scale_tiff"], _profile["workDir"])
     collected = collect(
-            d,
-            sf,
-            c,
-            index,
-            to_collect,
-            _profile["procs"],
-            _profile["workDir"],
-            _profile["target"],
-            debug,
-        )
+        d,
+        sf,
+        c,
+        index,
+        to_collect,
+        _profile["procs"],
+        _profile["workDir"],
+        _profile["target"],
+        debug,
+    )
     if debug:
         print("== COLLECTED ==")
         pprint.pprint(collected.sort_index())
-    agg = aggregate(
-        collected, _profile["procs"], _profile["timestep"], index_name, debug
-    )
+    agg = aggregate(collected, _profile["procs"], _profile["timestep"],
+                    index_name, debug)
     if debug:
         print("== AGGREGATED ==")
         pprint.pprint(agg)
@@ -406,7 +420,8 @@ def validateProfile(profile, debug=False):
         if not "forecast_start_year" in _profile:
             msg.append("forecast_start_year must be defined in the profile")
         if not "forecast_last_real_date" in _profile:
-            msg.append("forecast_last_real_date must be defined in the profile")
+            msg.append(
+                "forecast_last_real_date must be defined in the profile")
     if len(msg) != 0:
         print("\n".join(["ERROR:"] + msg))
         return None
@@ -415,25 +430,23 @@ def validateProfile(profile, debug=False):
         if "start_date" not in _profile and "start_year" in _profile:
             _profile["start_date"] = "{}-01-01".format(_profile["start_year"])
         if "end_date" not in _profile and "run_years" in _profile:
-            _profile["end_date"] = "{}-12-31".format(
-                _profile["start_year"] + (_profile["run_years"] - 1)
-            )
+            _profile["end_date"] = "{}-12-31".format(_profile["start_year"] +
+                                                     (_profile["run_years"] -
+                                                      1))
         if "forecast_start_year" in _profile:
             if not "start_date" in _profile:
                 _profile["start_date"] = "{}-01-01".format(
-                    _profile["forecast_last_real_date"][:4]
-                )
+                    _profile["forecast_last_real_date"][:4])
             if "end_date" in _profile:
-                _profile["forecast_end_year"] = int(_profile["end_date"].split("-")[0])
+                _profile["forecast_end_year"] = int(
+                    _profile["end_date"].split("-")[0])
             else:
                 _profile["forecast_end_year"] = int(
-                    int(_profile["forecast_last_real_date"].split("-")[0])
-                )
+                    int(_profile["forecast_last_real_date"].split("-")[0]))
         # A series of checks needs to be here sd < cd < ed
         _profile = {**default_weather_profile, **_profile}
-    (_profile["procs"], _profile["visibility"]) = parseProcesses(
-        _profile["processing"], debug
-    )
+    (_profile["procs"],
+     _profile["visibility"]) = parseProcesses(_profile["processing"], debug)
     if _profile["procs"]:
         return _profile
     else:
@@ -504,7 +517,8 @@ def parseProcess(process, debug=False):
         print("Invalid hook {}: Dropping process: {}".format(hook, process))
         return None
     if verb not in short_cmds and not factor.startswith("by"):
-        print("Invalid factor {}: Dropping process: {}".format(factor, process))
+        print("Invalid factor {}: Dropping process: {}".format(
+            factor, process))
         return None
     if verb not in short_cmds:
         factor = factor.split()[1]
@@ -513,7 +527,8 @@ def parseProcess(process, debug=False):
             # Need to work on guarding against not default or column names
             factor = f_num
     if modifier and modifier not in allowed_modifiers:
-        print("Invalid modifier {}: Dropping process: {}".format(modifier, process))
+        print("Invalid modifier {}: Dropping process: {}".format(
+            modifier, process))
         return None
     # normalize hooks
     if hook == "before agg" or hook == "before resampling" or hook == "before resample":
@@ -548,7 +563,8 @@ def parseProcesses(processes, debug=False):
         proc = {"dest": dest}
         process = process_dict[dest]
         if ":" not in process:
-            print("Invalid process string: Dropping process {}".format(process))
+            print(
+                "Invalid process string: Dropping process {}".format(process))
             continue
         (src, s) = process.split(":", maxsplit=1)
         proc["src"] = src.strip()

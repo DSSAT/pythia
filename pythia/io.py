@@ -5,7 +5,6 @@ import rasterio
 
 import pythia.functions
 import pythia.util
-
 """longitude/latitude"""
 
 
@@ -28,15 +27,14 @@ def peer(run, sample_size=None):
             else:
                 nodata.append(ds.nodatavals[0])
             band = ds.read(1)
-            data.append([_get_site_raster_value(ds, band, site)
-                         for site in sites])
-    peerless = list(filter(lambda x: x is not None, [read_layer_by_cell(
-        i, data, nodata, layers, sites) for i in range(len(sites))]))
+            data.append(
+                [_get_site_raster_value(ds, band, site) for site in sites])
+    peerless = list(
+        filter(lambda x: x is not None, [
+            read_layer_by_cell(i, data, nodata, layers, sites)
+            for i in range(len(sites))
+        ]))
     return peerless[:sample_size]
-
-
-def collect_high_res_soil(run):
-    pass
 
 
 def read_layer_by_cell(idx, data, nodata, layers, sites):
@@ -58,10 +56,6 @@ def get_rio_profile(f):
     with rasterio.open(f) as source:
         profile = source.profile
     return profile
-
-
-def get_shp_profile(f):
-    pass
 
 
 def extract_vector_coords(f):

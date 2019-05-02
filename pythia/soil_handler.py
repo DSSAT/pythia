@@ -150,11 +150,9 @@ def calculateICLayerData(soilData, run):
     ictot = calculateICNTOT(wf, run["initialN"], twf)
     icndist = calculateNDist(ictot, sbdm, thickness)
 
-    return transpose(
-        [
-            soilData["SLB"],
-            calculateH2O(run["fractionalAW"], slll, sdul),
-            [icnd * 10 * 0.1 for icnd in icndist],
-            [icnd * 10 * 0.9 for icnd in icndist],
-        ]
-    )
+    return transpose([
+        soilData["SLB"],
+        calculateH2O(run["fractionalAW"], slll, sdul),
+        [icnd * 10 * 0.1 for icnd in icndist],
+        [icnd * 10 * 0.9 for icnd in icndist],
+    ])

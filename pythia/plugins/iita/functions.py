@@ -18,9 +18,13 @@ def pdate_factors(year, start_offset, days_between, number_of_dates):
 def hdate_factors(pdates, start_offset, days_between, number_of_dates):
     g = generate_days(start_offset, days_between, number_of_dates)
     offsets = (datetime.timedelta(days=d) for d in g)
-    return list(dict.fromkeys([pythia.util.to_julian_date(pythia.util.from_julian_date(p) + h) for p, h in
-                               itertools.product(pdates, offsets)]))
+    return list(
+        dict.fromkeys([
+            pythia.util.to_julian_date(pythia.util.from_julian_date(p) + h)
+            for p, h in itertools.product(pdates, offsets)
+        ]))
 
 
 def generate_factor_list(pdates_len, hdates_offsets_len):
-    return [(pf+1, pf+hf+1) for pf,hf in itertools.product(range(pdates_len), range(hdates_offsets_len))]
+    return [(pf + 1, pf + hf + 1) for pf, hf in itertools.product(
+        range(pdates_len), range(hdates_offsets_len))]

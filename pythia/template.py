@@ -1,30 +1,62 @@
 from jinja2 import Environment, FileSystemLoader
 
 _t_formats = {
-    "xcrd": {"format": "{:>7.3f}"},
-    "ycrd": {"format": "{:>7.3f}"},
-    "tname": {"length": 25, "align": ":<"},
-    "mp": {"length": 2},
-    "mh": {"length": 2},
-    "icrt": {"length": 6},
-    "icres": {"length": 6},
-    "icren": {"length": 6},
-    "icbl": {"length": 6},
-    "sh2o": {"format":"{:>5.2f}"},
-    "snh4": {"length": 6},
-    "sno3": {"length": 6},
-    "pdate": {"length": 5},
-    "hdate": {"length": 5},
-    "nyers": {"length": 5},
-    "id_soil": {"length": 10}
+    "xcrd": {
+        "format": "{:>7.3f}"
+    },
+    "ycrd": {
+        "format": "{:>7.3f}"
+    },
+    "tname": {
+        "length": 25,
+        "align": ":<"
+    },
+    "mp": {
+        "length": 2
+    },
+    "mh": {
+        "length": 2
+    },
+    "icrt": {
+        "length": 6
+    },
+    "icres": {
+        "length": 6
+    },
+    "icren": {
+        "length": 6
+    },
+    "icbl": {
+        "length": 6
+    },
+    "sh2o": {
+        "format": "{:>5.2f}"
+    },
+    "snh4": {
+        "length": 6
+    },
+    "sno3": {
+        "length": 6
+    },
+    "pdate": {
+        "length": 5
+    },
+    "hdate": {
+        "length": 5
+    },
+    "nyers": {
+        "length": 5
+    },
+    "id_soil": {
+        "length": 10
+    }
 }
 
 
 def init_engine(template_dir):
     return Environment(loader=FileSystemLoader(template_dir),
                        trim_blocks=True,
-                       lstrip_blocks=True
-                       )
+                       lstrip_blocks=True)
 
 
 def auto_format_dict(d):
@@ -43,7 +75,9 @@ def auto_format_dict(d):
                 elif isinstance(v, int):
                     fmt_len = "{}d".format(_t_formats[k]["length"])
                 else:
-                    fmt_len = "{0}.{0}".format(_t_formats[k]["length"], _t_formats[k].get("precision",2))
+                    fmt_len = "{0}.{0}".format(
+                        _t_formats[k]["length"],
+                        _t_formats[k].get("precision", 2))
                 fmt = "{" + fmt_align + fmt_pad + fmt_len + "}"
             clean[k] = fmt.format(v)
         elif isinstance(v, dict):

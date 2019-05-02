@@ -13,12 +13,17 @@ def from_julian_date(s):
 
 def get_rasters_list(iterator):
     return list(
-        set([pythia.functions.extract_raster(raster) for raster in
-             list(filter(lambda x: "raster::" in str(x), iterator))]))
+        set([
+            pythia.functions.extract_raster(raster) for raster in list(
+                filter(lambda x: "raster::" in str(x), iterator))
+        ]))
 
 
 def get_rasters_dict(iterator):
-    return {k: pythia.functions.extract_raster(v) for (k, v) in iterator.items() if "raster::" in str(v)}
+    return {
+        k: pythia.functions.extract_raster(v)
+        for (k, v) in iterator.items() if "raster::" in str(v)
+    }
 
 
 def translate_coords_news(lat, lng):

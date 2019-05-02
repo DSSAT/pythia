@@ -28,9 +28,11 @@ def auto_planting_window(k, run, context):
     first = datetime.date(run["startYear"], vals[0], vals[1])
     td = datetime.timedelta(days=vals[2])
     last = first + td
-    return {"pdate": pythia.util.to_julian_date(first),
-            "pfrst": pythia.util.to_julian_date(first),
-            "plast": pythia.util.to_julian_date(last)}
+    return {
+        "pdate": pythia.util.to_julian_date(first),
+        "pfrst": pythia.util.to_julian_date(first),
+        "plast": pythia.util.to_julian_date(last)
+    }
 
 
 def lookup_hc27(k, run, context):
@@ -45,8 +47,8 @@ def lookup_wth(k, run, context):
     args = run[k].split("::")[1:]
     if "vector" in args:
         idx = args.index("vector")
-        cell_id = pythia.io.find_vector_coords(
-            args[idx + 1], context["lng"], context["lat"], args[idx + 2])
+        cell_id = pythia.io.find_vector_coords(args[idx + 1], context["lng"],
+                                               context["lat"], args[idx + 2])
         return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
 
 
@@ -56,8 +58,8 @@ def generate_ic_layers(k, run, context):
         profile = args[0][1:]
     else:
         profile = args[0]
-    soil_file = pythia.soil_handler.findSoilProfile(
-        context[profile], context["soilFiles"])
+    soil_file = pythia.soil_handler.findSoilProfile(context[profile],
+                                                    context["soilFiles"])
     layers = pythia.soil_handler.readSoilLayers(context[profile], soil_file)
     calculated_layers = pythia.soil_handler.calculateICLayerData(layers, run)
     layer_labels = ["icbl", "sh2o", "snh4", "sno3"]
@@ -72,13 +74,17 @@ def lookup_ghr(k, run, context):
         with sqlite3.connect("data/base/GHR/GHR.db") as conn:
             conn.set_trace_callback(logging.info)
             c = conn.cursor()
-            tif_profile_id = (int(str(context[k])),)
+            tif_profile_id = (int(str(context[k])), )
             c.execute("SELECT profile from profile_map WHERE id=?",
                       tif_profile_id)
             id_soil = c.fetchone()
             if id_soil:
                 id_soil = id_soil[0]
-                return {k: id_soil,
-                        "soilFiles": ["data/base/GHR/{}.SOL".format(id_soil[:2].upper())]}
+                return {
+                    k:
+                    id_soil,
+                    "soilFiles":
+                    ["data/base/GHR/{}.SOL".format(id_soil[:2].upper())]
+                }
             else:
                 return {k: None}

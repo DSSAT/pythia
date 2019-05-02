@@ -3,3 +3,4 @@ data/*
 pythia/__pycache__/*
 .idea/*
 .vscode/*
+*.pyc

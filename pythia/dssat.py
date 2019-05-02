@@ -7,9 +7,14 @@ from multiprocessing.pool import ThreadPool
 
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
-    command_string = "cd {} && {} {} {}".format(details['dir'], config['dssat']['executable'], config['dssat'].get('mode', 'A'), details['file'])
+    command_string = "cd {} && {} {} {}".format(
+        details['dir'], config['dssat']['executable'],
+        config['dssat'].get('mode', 'A'), details['file'])
     print(".", end="")
-    dssat = subprocess.Popen(command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    dssat = subprocess.Popen(command_string,
+                             shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
     out, err = dssat.communicate()
     print("+", end="")
     return details['dir'], details['file'], out, err, dssat.returncode
