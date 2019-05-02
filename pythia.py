@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config", help="JSON configuration file to run")
-    parser.add_argument("--all", action='store_true')
+    parser.add_argument("--all", action="store_true")
     parser.add_argument("--setup", action="store_true")
     parser.add_argument("--run-dssat", action="store_true")
     parser.add_argument("--analyze", action="store_true")
@@ -26,8 +26,9 @@ if __name__ == "__main__":
     else:
         config = pythia.config.load_config(args.config)
         if args.clean_work_dir:
-            print("Cleaning work directory")
             import shutil
+
+            print("Cleaning work directory")
             shutil.rmtree(config["workDir"])
         for run in config.get("runs", []):
             peerless = []

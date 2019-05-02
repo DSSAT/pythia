@@ -88,3 +88,13 @@ def lookup_ghr(k, run, context):
                 }
             else:
                 return {k: None}
+
+
+def _bounded_offset(original_value, offset, min_val=None, max_val=None):
+    new_value = original_value + offset
+    if min_val and new_value < min_val:
+        return min_val
+    elif max_val and new_value > max_val:
+        return max_val
+    else:
+        return new_value

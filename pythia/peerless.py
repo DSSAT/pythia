@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 import os
 import queue
 import shutil
@@ -36,8 +37,18 @@ def split_levels(levels, max_size):
 def iita_build_treatments(context):
     pdates = iita.pdate_factors(context["startYear"], 3, 7, 52)
     hdates = iita.hdate_factors(pdates, 293, 7, 23)
+
+    # date offset hack
+    min_date = date(1984, 1, 1)
+    sdates = [
+        pythia.util.to_julian_date(
+            pythia.functions._bounded_offset(pythia.util.from_julian_date(d),
+                                             timedelta(days=-30),
+                                             min_val=min_date)) for d in pdates
+    ]
     context["pdates"] = pdates
     context["hdates"] = hdates
+    context["sdates"] = sdates
     context["factors"] = [{
         "tname":
         "iita_p{}_h{}".format(pdates[pf - 1], hdates[hf - 1]),
