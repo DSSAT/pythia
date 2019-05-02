@@ -4,6 +4,7 @@
     "templateDir": "data/templates",
     "threads": 8,
     "sample": 30,
+    "weatherDir":"data/weathers",
     "default_setup": {
         "template": "NGSP0000.CSX",
         "sites": "xy_from_vector::data/shapes/Nigeria_shapefile.shp",
@@ -14,6 +15,7 @@
         "icrt": 5,
         "icres": 10,
         "icren": 0.8,
+        "wsta":"lookup_wth::IITA::vector::data/shapes/Nigeria_shapefile.shp::CellID",
         "id_soil": "lookup_ghr::raster::data/rasters/iita_nigeria_ghr.tif",
         "ic_layers":"generate_ic_layers::$id_soil"
     },
