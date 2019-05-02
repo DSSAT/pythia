@@ -5,3 +5,4 @@ pythia/__pycache__/*
 .vscode/*
 *.pyc
 TODO.org
+work/*

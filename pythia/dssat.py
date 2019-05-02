@@ -24,7 +24,7 @@ def _generate_run_list(config):
     for root, _, files in os.walk(config.get("workDir", "."), topdown=False):
         for name in files:
             dssat_mode = config['dssat'].get("mode", "A")
-            if dssat_mode("A"):
+            if dssat_mode == "A":
                 if name.upper().endswith("X"):
                     yield {"dir": root, "file": name}
             else:
