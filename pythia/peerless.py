@@ -66,22 +66,21 @@ def compose_peerless(ctx):
     y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
     context["xcrd"] = p["lat"]
     context["ycrd"] = p["lng"]
-    this_output_dir = os.path.join(context["workDir"], y, x)
-    pythia.io.make_run_directory(this_output_dir)
-    if "weatherDir" in config:
-        shutil.copy2(
-            os.path.join(config["weatherDir"], context["wthFile"]),
-            os.path.join(this_output_dir, "{}.WTH".format(context["wsta"])))
-    for soil in context["soilFiles"]:
-        shutil.copy2(soil, this_output_dir)
     context = iita_build_treatments(context)
-    for out_suffix, split in enumerate(split_levels(context["factors"], 99)):
+    for out_suffix, split in enumerate(split_levels(context["factors"], 23)):
+        this_output_dir = os.path.join(context["workDir"], y, x,
+                                       str(out_suffix))
+        pythia.io.make_run_directory(this_output_dir)
+        if "weatherDir" in config:
+            shutil.copy2(
+                os.path.join(config["weatherDir"], context["wthFile"]),
+                os.path.join(this_output_dir,
+                             "{}.WTH".format(context["wsta"])))
+        for soil in context["soilFiles"]:
+            shutil.copy2(soil, this_output_dir)
         context["treatments"] = split
         xfile = pythia.template.render_template(env, run["template"], context)
-        with open(
-                os.path.join(this_output_dir,
-                             "NGSP00{:>02d}.CSX".format(out_suffix)),
-                "w") as f:
+        with open(os.path.join(this_output_dir, "NGSP0000.CSX"), "w") as f:
             f.write(xfile)
     # Write the batch file
     if config["dssat"].get("mode", "A") == "B":
