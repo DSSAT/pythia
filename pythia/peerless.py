@@ -55,9 +55,22 @@ def iita_build_treatments(context):
         "mp":
         pf,
         "mh":
-        hf
+        hf,
     } for pf, hf in iita.generate_factor_list(52, 23)]
     return context
+
+
+def symlink_wth_soil(output_dir, config, context):
+    if "weatherDir" in config:
+        os.symlink(
+            os.path.abspath(
+                os.path.join(config["weatherDir"], context["wthFile"])),
+            os.path.join(output_dir, "{}.WTH".format(context["wsta"])))
+    for soil in context["soilFiles"]:
+        os.symlink(
+            os.path.abspath(soil),
+            os.path.join(output_dir, os.path.basename(soil)),
+        )
 
 
 def compose_peerless(ctx):
@@ -67,34 +80,39 @@ def compose_peerless(ctx):
     context["xcrd"] = p["lat"]
     context["ycrd"] = p["lng"]
     context = iita_build_treatments(context)
+
+    dssat_mode = config["dssat"].get("mode", "A")
+    this_output_dir = os.path.join(context["workDir"], y, x)
+    pythia.io.make_run_directory(this_output_dir)
+    if dssat_mode == "B":
+        symlink_wth_soil(this_output_dir, config, context)
     for out_suffix, split in enumerate(split_levels(context["factors"], 23)):
-        this_output_dir = os.path.join(context["workDir"], y, x,
-                                       str(out_suffix))
-        pythia.io.make_run_directory(this_output_dir)
-        if "weatherDir" in config:
-            shutil.copy2(
-                os.path.join(config["weatherDir"], context["wthFile"]),
-                os.path.join(this_output_dir,
-                             "{}.WTH".format(context["wsta"])))
-        for soil in context["soilFiles"]:
-            shutil.copy2(soil, this_output_dir)
+        if dssat_mode == "A":
+            this_output_dir = os.path.join(this_output_dir, str(out_suffix))
+            pythia.io.make_run_directory(this_output_dir)
+            symlink_wth_soil(this_output_dir, config, context)
         context["treatments"] = split
         xfile = pythia.template.render_template(env, run["template"], context)
-        with open(os.path.join(this_output_dir, "NGSP0000.CSX"), "w") as f:
+        if dssat_mode == "B":
+            xfile_name = "NGSP00{:>02d}.CSX".format(out_suffix)
+        else:
+            xfile_name = "NGSP0000.CSX"
+        with open(os.path.join(this_output_dir, xfile_name), "w") as f:
             f.write(xfile)
     # Write the batch file
-    if config["dssat"].get("mode", "A") == "B":
+    if dssat_mode == "B":
         with open(
                 os.path.join(this_output_dir,
                              config["dssat"].get("batchFile", "DSSBATCH.v47")),
-                "w") as f:
+                "w",
+        ) as f:
             f.write("$BATCH(PYTHIA)\n")
-            f.write(
-                "@FILEX                                                                                        TRTNO     RP     SQ     OP     CO\n"
-            )
+            f.write("@FILEX                                                  "
+                    "                                      TRTNO     RP     "
+                    "SQ     OP     CO\n")
             for out_suffix, treatments in enumerate(
                     split_levels(context["factors"], 99)):
-                for trtno, _ in enumerate(treatments):
+                for trtno in range(len(treatments)):
                     filename = "NGSP00{:>02d}.CSX".format(out_suffix)
                     f.write(
                         "{:<94s}{:>5d}      1      0      0      0\n".format(

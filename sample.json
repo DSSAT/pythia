@@ -3,7 +3,7 @@
     "workDir": "work/iita",
     "templateDir": "data/templates",
     "threads": 8,
-    "sample": 30,
+    "sample": 3,
     "weatherDir":"data/weathers",
     "default_setup": {
         "template": "NGSP0000.CSX",
@@ -20,9 +20,9 @@
         "ic_layers":"generate_ic_layers::$id_soil"
     },
     "dssat": {
-        "executable": "~/dssat/dscsm047",
-        "mode": "B",
-        "batchFile":"PIXEL.v47"
+        "executable": "~/dssat47/dscsm047",
+	"mode":"B",
+	"batchFile":"PIXEL.v47"
     },
     "analysis": {
         "default_analysis" : {
