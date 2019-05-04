@@ -26,10 +26,12 @@ if __name__ == "__main__":
     else:
         config = pythia.config.load_config(args.config)
         if args.clean_work_dir:
+            import os
             import shutil
 
             print("Cleaning work directory")
-            shutil.rmtree(config["workDir"])
+            if(os.path.isdir(config["workDir"])):
+                shutil.rmtree(config["workDir"])
         for run in config.get("runs", []):
             peerless = []
             if args.all or args.setup or args.analyze:
