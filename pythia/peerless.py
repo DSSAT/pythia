@@ -67,15 +67,19 @@ def iita_build_treatments(context):
 
 def symlink_wth_soil(output_dir, config, context):
     if "weatherDir" in config:
-        os.symlink(
-            os.path.abspath(
-                os.path.join(config["weatherDir"], context["wthFile"])),
-            os.path.join(output_dir, "{}.WTH".format(context["wsta"])))
+        weather_file = os.path.join(output_dir,
+                                    "{}.WTH".format(context["wsta"]))
+        if not os.path.exists(weather_file):
+            os.symlink(
+                os.path.abspath(
+                    os.path.join(config["weatherDir"], context["wthFile"])),
+                os.path.join(weather_file),
+            )
     for soil in context["soilFiles"]:
-        os.symlink(
-            os.path.abspath(soil),
-            os.path.join(output_dir, os.path.basename(soil)),
-        )
+        soil_file = os.path.join(output_dir, os.path.basename(soil))
+        if not os.path.exists(soil_file):
+            os.symlink(os.path.abspath(soil),
+                       os.path.join(output_dir, os.path.basename(soil)))
 
 
 def compose_peerless(ctx):

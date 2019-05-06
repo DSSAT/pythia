@@ -58,13 +58,8 @@ def generate_ic_layers(k, run, context):
         profile = args[0][1:]
     else:
         profile = args[0]
-    try:
-        soil_file = pythia.soil_handler.findSoilProfile(context[profile],
-                                                        context["soilFiles"])
-    except FileNotFoundError:
-        logging.error("File not found error triggered")
-        logging.error(run)
-        logging.error(context)
+    soil_file = pythia.soil_handler.findSoilProfile(context[profile],
+                                                    context["soilFiles"])
     layers = pythia.soil_handler.readSoilLayers(context[profile], soil_file)
     calculated_layers = pythia.soil_handler.calculateICLayerData(layers, run)
     layer_labels = ["icbl", "sh2o", "snh4", "sno3"]
