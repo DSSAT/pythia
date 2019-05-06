@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 import os
+import logging
 import queue
-import shutil
 import threading
 
 import pythia.functions
@@ -22,6 +22,11 @@ def build_context(run, ctx):
             if fn != "raster":
                 if "." not in fn:
                     res = getattr(pythia.functions, fn)(k, run, context)
+                    if res is None:
+                        logging.error(
+                            "Failed function %s, "
+                            "attempting to return None", fn)
+                        return None
                     context = {**context, **res}
                 else:
                     # dynamic plugin loader here
@@ -76,47 +81,52 @@ def symlink_wth_soil(output_dir, config, context):
 def compose_peerless(ctx):
     run, p, config, env = ctx
     context = build_context(run, p)
-    y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
-    context["xcrd"] = p["lat"]
-    context["ycrd"] = p["lng"]
-    context = iita_build_treatments(context)
+    if context is not None:
+        y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
+        context["xcrd"] = p["lat"]
+        context["ycrd"] = p["lng"]
+        context = iita_build_treatments(context)
 
-    dssat_mode = config["dssat"].get("mode", "A")
-    this_output_dir = os.path.join(context["workDir"], y, x)
-    pythia.io.make_run_directory(this_output_dir)
-    if dssat_mode == "B":
-        symlink_wth_soil(this_output_dir, config, context)
-    for out_suffix, split in enumerate(split_levels(context["factors"], 23)):
-        if dssat_mode == "A":
-            this_output_dir = os.path.join(this_output_dir, str(out_suffix))
-            pythia.io.make_run_directory(this_output_dir)
-            symlink_wth_soil(this_output_dir, config, context)
-        context["treatments"] = split
-        xfile = pythia.template.render_template(env, run["template"], context)
+        dssat_mode = config["dssat"].get("mode", "A")
+        this_output_dir = os.path.join(context["workDir"], y, x)
+        pythia.io.make_run_directory(this_output_dir)
         if dssat_mode == "B":
-            xfile_name = "NGSP00{:>02d}.CSX".format(out_suffix)
-        else:
-            xfile_name = "NGSP0000.CSX"
-        with open(os.path.join(this_output_dir, xfile_name), "w") as f:
-            f.write(xfile)
-    # Write the batch file
-    if dssat_mode == "B":
-        with open(
-                os.path.join(this_output_dir,
-                             config["dssat"].get("batchFile", "DSSBATCH.v47")),
-                "w",
-        ) as f:
-            f.write("$BATCH(PYTHIA)\n")
-            f.write("@FILEX                                                  "
+            symlink_wth_soil(this_output_dir, config, context)
+        for out_suffix, split in enumerate(split_levels(
+                context["factors"], 23)):
+            if dssat_mode == "A":
+                this_output_dir = os.path.join(this_output_dir,
+                                               str(out_suffix))
+                pythia.io.make_run_directory(this_output_dir)
+                symlink_wth_soil(this_output_dir, config, context)
+            context["treatments"] = split
+            xfile = pythia.template.render_template(env, run["template"],
+                                                    context)
+            if dssat_mode == "B":
+                xfile_name = "NGSP00{:>02d}.CSX".format(out_suffix)
+            else:
+                xfile_name = "NGSP0000.CSX"
+            with open(os.path.join(this_output_dir, xfile_name), "w") as f:
+                f.write(xfile)
+        # Write the batch file
+        if dssat_mode == "B":
+            with open(
+                    os.path.join(
+                        this_output_dir,
+                        config["dssat"].get("batchFile", "DSSBATCH.v47")),
+                    "w",
+            ) as f:
+                f.write("$BATCH(PYTHIA)\n")
+                f.write(
+                    "@FILEX                                                  "
                     "                                      TRTNO     RP     "
                     "SQ     OP     CO\n")
-            for out_suffix, treatments in enumerate(
-                    split_levels(context["factors"], 99)):
-                for trtno in range(len(treatments)):
-                    filename = "NGSP00{:>02d}.CSX".format(out_suffix)
-                    f.write(
-                        "{:<94s}{:>5d}      1      0      0      0\n".format(
-                            filename, trtno + 1))
+                for out_suffix, treatments in enumerate(
+                        split_levels(context["factors"], 99)):
+                    for trtno in range(len(treatments)):
+                        filename = "NGSP00{:>02d}.CSX".format(out_suffix)
+                        f.write("{:<94s}{:>5d}      1      0      0      0\n".
+                                format(filename, trtno + 1))
 
 
 def oracle():

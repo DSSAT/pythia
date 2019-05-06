@@ -31,7 +31,7 @@ def auto_planting_window(k, run, context):
     return {
         "pdate": pythia.util.to_julian_date(first),
         "pfrst": pythia.util.to_julian_date(first),
-        "plast": pythia.util.to_julian_date(last)
+        "plast": pythia.util.to_julian_date(last),
     }
 
 
@@ -58,8 +58,13 @@ def generate_ic_layers(k, run, context):
         profile = args[0][1:]
     else:
         profile = args[0]
-    soil_file = pythia.soil_handler.findSoilProfile(context[profile],
-                                                    context["soilFiles"])
+    try:
+        soil_file = pythia.soil_handler.findSoilProfile(context[profile],
+                                                        context["soilFiles"])
+    except FileNotFoundError:
+        logging.error("File not found error triggered")
+        logging.error(run)
+        logging.error(context)
     layers = pythia.soil_handler.readSoilLayers(context[profile], soil_file)
     calculated_layers = pythia.soil_handler.calculateICLayerData(layers, run)
     layer_labels = ["icbl", "sh2o", "snh4", "sno3"]
@@ -68,6 +73,7 @@ def generate_ic_layers(k, run, context):
 
 def lookup_ghr(k, run, context):
     import sqlite3
+
     args = run[k].split("::")[1:]
     if "raster" in args:
         logging.info("lookup_ghr - context[%s] => %s", k, context[k])
@@ -78,16 +84,17 @@ def lookup_ghr(k, run, context):
             c.execute("SELECT profile from profile_map WHERE id=?",
                       tif_profile_id)
             id_soil = c.fetchone()
-            if id_soil:
+            if id_soil and id_soil[0].strip() != "":
                 id_soil = id_soil[0]
+                logging.info("Soil found: %s", id_soil)
                 return {
                     k:
                     id_soil,
                     "soilFiles":
-                    ["data/base/GHR/{}.SOL".format(id_soil[:2].upper())]
+                    ["data/base/GHR/{}.SOL".format(id_soil[:2].upper())],
                 }
             else:
-                return {k: None}
+                return None
 
 
 def _bounded_offset(original_value, offset, min_val=None, max_val=None):

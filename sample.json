@@ -2,8 +2,8 @@
     "name": "IITA_Casava",
     "workDir": "work/iita",
     "templateDir": "data/templates",
-    "threads": 8,
-    "sample": 3,
+    "threads": 50,
+    "sample": 200,
     "weatherDir":"data/weathers",
     "default_setup": {
         "template": "NGSP0000.CSX",
