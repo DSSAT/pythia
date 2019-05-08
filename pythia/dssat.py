@@ -29,7 +29,8 @@ def _generate_run_list(config):
                     yield {"dir": root, "file": name}
             else:
                 if name == config["dssat"]["batchFile"]:
-                    yield {"dir": root, "file": name}
+                    if "summary.csv" not in files:
+                        yield {"dir": root, "file": name}
 
 
 def execute(config):

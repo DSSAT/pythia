@@ -1,4 +1,5 @@
 import os
+import logging
 
 import fiona
 import rasterio
@@ -9,8 +10,8 @@ import pythia.util
 
 
 def _get_site_raster_value(dataset, band, site):
-    y, x = site
-    row, col = dataset.index(y, x)
+    x, y = site
+    row, col = dataset.index(x, y)
     return band[row, col]
 
 
@@ -38,7 +39,7 @@ def peer(run, sample_size=None):
 
 
 def read_layer_by_cell(idx, data, nodata, layers, sites):
-    y, x = sites[idx]
+    x, y = sites[idx]
     cell = {"lat": y, "lng": x}
     for i, c in enumerate(data):
         if c[idx] == nodata[i]:
@@ -70,7 +71,7 @@ def extract_vector_coords(f):
 
 
 def find_vector_coords(f, x, y, a):
-    coords = (y, x)
+    coords = (x, y)
     with fiona.open(f) as source:
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":

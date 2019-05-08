@@ -1,9 +1,9 @@
 {
     "name": "IITA_Casava",
-    "workDir": "work/iita",
+    "workDir": "work/tests/missing_soils",
     "templateDir": "data/templates",
     "threads": 50,
-    "sample": 200,
+    "sample": 300,
     "weatherDir":"data/weathers",
     "default_setup": {
         "template": "NGSP0000.CSX",

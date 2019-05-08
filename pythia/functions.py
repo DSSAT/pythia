@@ -73,7 +73,6 @@ def lookup_ghr(k, run, context):
     if "raster" in args:
         logging.info("lookup_ghr - context[%s] => %s", k, context[k])
         with sqlite3.connect("data/base/GHR/GHR.db") as conn:
-            conn.set_trace_callback(logging.info)
             c = conn.cursor()
             tif_profile_id = (int(str(context[k])), )
             c.execute("SELECT profile from profile_map WHERE id=?",
@@ -81,7 +80,6 @@ def lookup_ghr(k, run, context):
             id_soil = c.fetchone()
             if id_soil and id_soil[0].strip() != "":
                 id_soil = id_soil[0]
-                logging.info("Soil found: %s", id_soil)
                 return {
                     k:
                     id_soil,
@@ -89,6 +87,8 @@ def lookup_ghr(k, run, context):
                     ["data/base/GHR/{}.SOL".format(id_soil[:2].upper())],
                 }
             else:
+                logging.error("Soil NOT found")
+                logging.error(context)
                 return None
 
 
