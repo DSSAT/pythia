@@ -67,7 +67,7 @@ def extract_vector_coords(f):
                 points.append(feature["geometry"]["coordinates"][0])
             if feature["geometry"]["type"] == "Point":
                 points.append(feature["geometry"]["coordinates"])
-    return points
+    return list(set(points))
 
 
 def find_vector_coords(f, x, y, a):
