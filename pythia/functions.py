@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import pythia.io
 import pythia.soil_handler
@@ -44,7 +45,8 @@ def lookup_wth(k, run, context):
     args = run[k].split("::")[1:]
     if "vector" in args:
         idx = args.index("vector")
-        cell_id = pythia.io.find_vector_coords(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
+        cell_id = pythia.io.find_vector_coords(
+            args[idx + 1], context["lng"], context["lat"], args[idx + 2])
         return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
 
 
@@ -54,8 +56,39 @@ def generate_ic_layers(k, run, context):
         profile = args[0][1:]
     else:
         profile = args[0]
-    soil_file = pythia.soil_handler.findSoilProfile(context[profile], run["soilFiles"])
+    soil_file = pythia.soil_handler.findSoilProfile(
+        context[profile], context["soilFiles"])
     layers = pythia.soil_handler.readSoilLayers(context[profile], soil_file)
     calculated_layers = pythia.soil_handler.calculateICLayerData(layers, run)
     layer_labels = ["icbl", "sh2o", "snh4", "sno3"]
     return {k: [dict(zip(layer_labels, cl)) for cl in calculated_layers]}
+
+
+def lookup_ghr(k, run, context):
+    global config
+    import os
+    import sqlite3
+
+    args = run[k].split("::")[1:]
+    if "raster" in args:
+        logging.debug("lookup_ghr - context[%s] => %s", k, context[k])
+        with sqlite3.connect(os.path.join(config["ghr_root"],
+                                          "GHR.db")) as conn:
+            c = conn.cursor()
+            tif_profile_id = (int(str(context[k])), )
+            c.execute("SELECT profile from profile_map WHERE id=?",
+                      tif_profile_id)
+            id_soil = c.fetchone()
+            if id_soil and id_soil[0].strip() != "":
+                id_soil = id_soil[0]
+                sol_file = "{}.SOL".format(id_soil[:2].upper())
+                return {
+                    k:
+                    id_soil,
+                    "soilFiles":
+                    [os.path.join(config["ghr_root"], sol_file)],
+                }
+            else:
+                logging.error("Soil NOT found")
+                logging.error(context)
+                return None
