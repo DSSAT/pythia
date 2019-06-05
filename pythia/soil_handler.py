@@ -126,8 +126,9 @@ def calculateNDist(icn, sbdm, thickness):
 
 def calculateH2O(fractionalAW, slll, sdul):
     h2o = []
+    fAW = fractionalAW / 100.0
     for i, ll in enumerate(slll):
-        h2o.append((fractionalAW * (sdul[i] - ll)) + ll)
+        h2o.append((fAW * (sdul[i] - ll)) + ll)
     return h2o
 
 
@@ -147,13 +148,13 @@ def calculateICLayerData(soilData, run):
 
     # tsbdm = sum([thickness[i] * sbdm[i] for i in range(len(thickness))])
     twf = sum(wf)
-    ictot = calculateICNTOT(wf, run["initialN"], twf)
+    ictot = calculateICNTOT(wf, run["icin"], twf)
     icndist = calculateNDist(ictot, sbdm, thickness)
 
     return transpose(
         [
             soilData["SLB"],
-            calculateH2O(run["fractionalAW"], slll, sdul),
+            calculateH2O(run["icsw%"], slll, sdul),
             [icnd * 10 * 0.1 for icnd in icndist],
             [icnd * 10 * 0.9 for icnd in icndist],
         ]
