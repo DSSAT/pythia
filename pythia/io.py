@@ -37,7 +37,7 @@ def peer(run, sample_size=None):
 
 def read_layer_by_cell(idx, data, nodata, layers, sites):
     y, x = sites[idx]
-    cell = {"lat": y, "lng": x}
+    cell = {"lat": y, "lng": x, "xcrd": x, "ycrd": y}
     for i, c in enumerate(data):
         if c[idx] == nodata[i]:
             return None
