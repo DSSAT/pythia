@@ -32,7 +32,7 @@ if __name__ == "__main__":
             if args.all or args.setup:
                 peerless = pythia.io.peer(run, config.get("sample", None))
                 pythia.peerless.execute(run, peerless, config)
-            if args.all or args.run_dssat:
-                pythia.dssat.execute(config)
-            if args.analyze:
-                print("Analysis module is still being hooked up")
+        if args.all or args.run_dssat:
+            pythia.dssat.execute(config)
+        if args.analyze:
+            print("Analysis module is still being hooked up")
