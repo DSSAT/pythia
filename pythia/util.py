@@ -10,6 +10,9 @@ def to_julian_date(d):
 def from_julian_date(s):
     return datetime.datetime.strptime(s, "%y%j").date()
 
+def from_iso_date(s):
+    return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+
 
 def get_rasters_list(iterator):
     return list(
