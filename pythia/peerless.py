@@ -73,7 +73,7 @@ def execute(config):
             build_context, _generate_context_args(runs, peers, config), 250
         ):
             if context is not None:
-                pool.apply_async(compose_peerless, (context, config, env))
+                compose_peerless(context, config, env)
             else:
                 print("X", end="", flush=True)
     print()
