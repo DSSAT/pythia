@@ -7,12 +7,16 @@ from multiprocessing.pool import Pool
 
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
-    command_string = "cd {} && {} A {}".format(details['dir'], config['dssat']['executable'], details['file'])
-    #print(".", end="", flush=True)
-    dssat = subprocess.Popen(command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    command_string = "cd {} && {} A {}".format(
+        details["dir"], config["dssat"]["executable"], details["file"]
+    )
+    # print(".", end="", flush=True)
+    dssat = subprocess.Popen(
+        command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     out, err = dssat.communicate()
-    #print("+", end="", flush=True)
-    return details['dir'], details['file'], out, err, dssat.returncode
+    # print("+", end="", flush=True)
+    return details["dir"], details["file"], out, err, dssat.returncode
 
 
 def _generate_run_list(config):
@@ -29,11 +33,11 @@ def display_async(details):
 
 
 def execute(config):
-    pool_size = config.get("threads", mp.cpu_count())
+    pool_size = config.get("cores", mp.cpu_count())
     results = []
     l = _generate_run_list(config)
     with Pool(processes=pool_size) as pool:
-        for details in l: #_generate_run_list(config):
+        for details in l:  # _generate_run_list(config):
             r = pool.apply_async(_run_dssat, (details, config), callback=display_async)
         pool.close()
         pool.join()
