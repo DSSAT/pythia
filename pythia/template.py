@@ -22,7 +22,9 @@ _t_formats = {
     "famn":    {"length": 6},
     "ramt":    {"length": 6},
     "sdate":   {"length": 5},
-    "nyers":   {"length": 5}
+    "nyers":   {"length": 5},
+    "flhst":   {"length": 5},
+    "fhdur":   {"length": 5}
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast"]
