@@ -29,7 +29,19 @@ def _generate_run_list(config):
 
 
 def display_async(details):
-    print(details)
+    printed = False
+    loc, xfile, out, error, retcode = details
+    error_count = len(out.decode().split("\n")) - 1
+    if error_count > 0:
+        logging.warning(
+            "Check the DSSAT summary file in %s. %d failures occured\n%s",
+            loc,
+            error_count,
+            out.decode()[:-1],
+        )
+        print("X", end="", flush=True)
+    else:
+        print(".", end="", flush=True)
 
 
 def execute(config):
@@ -38,6 +50,7 @@ def execute(config):
     l = _generate_run_list(config)
     with Pool(processes=pool_size) as pool:
         for details in l:  # _generate_run_list(config):
-            r = pool.apply_async(_run_dssat, (details, config), callback=display_async)
+            pool.apply_async(_run_dssat, (details, config), callback=display_async)
         pool.close()
         pool.join()
+    print("\nIf you see an X above, please check the pythia.log for more details")
