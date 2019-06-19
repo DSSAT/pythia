@@ -85,7 +85,6 @@ def symlink_wth_soil(output_dir, config, context):
 def compose_peerless(ctx):
     run, p, config, env = ctx
     context = build_context(run, p)
-    batch_chunks = 23
     if context is not None:
         y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
         context["xcrd"] = p["lat"]
@@ -96,6 +95,7 @@ def compose_peerless(ctx):
         this_output_dir = os.path.join(context["workDir"], y, x)
         pythia.io.make_run_directory(this_output_dir)
         if dssat_mode == "B":
+            batch_chunks = config["dssat"].get("batch_chunks", 99)
             symlink_wth_soil(this_output_dir, config, context)
         for out_suffix, split in enumerate(split_levels(
                 context["factors"], batch_chunks)):
