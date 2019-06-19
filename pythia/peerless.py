@@ -85,6 +85,7 @@ def symlink_wth_soil(output_dir, config, context):
 def compose_peerless(ctx):
     run, p, config, env = ctx
     context = build_context(run, p)
+    batch_chunks = 23
     if context is not None:
         y, x = pythia.util.translate_coords_news(p["lat"], p["lng"])
         context["xcrd"] = p["lat"]
@@ -97,7 +98,7 @@ def compose_peerless(ctx):
         if dssat_mode == "B":
             symlink_wth_soil(this_output_dir, config, context)
         for out_suffix, split in enumerate(split_levels(
-                context["factors"], 23)):
+                context["factors"], batch_chunks)):
             if dssat_mode == "A":
                 this_output_dir = os.path.join(this_output_dir,
                                                str(out_suffix))
@@ -126,7 +127,7 @@ def compose_peerless(ctx):
                     "                                      TRTNO     RP     "
                     "SQ     OP     CO\n")
                 for out_suffix, treatments in enumerate(
-                        split_levels(context["factors"], 99)):
+                        split_levels(context["factors"], batch_chunks)):
                     for trtno in range(len(treatments)):
                         filename = "NGSP00{:>02d}.CSX".format(out_suffix)
                         f.write("{:<94s}{:>5d}      1      0      0      0\n".
