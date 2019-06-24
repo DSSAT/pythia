@@ -29,7 +29,6 @@ def _generate_run_list(config):
 
 
 def display_async(details):
-    printed = False
     loc, xfile, out, error, retcode = details
     error_count = len(out.decode().split("\n")) - 1
     if error_count > 0:
