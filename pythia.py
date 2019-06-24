@@ -2,6 +2,7 @@ import logging
 
 import pythia.config
 import pythia.dssat
+import pythia.analytics
 import pythia.io
 import pythia.peerless
 
@@ -49,3 +50,4 @@ if __name__ == "__main__":
             pythia.dssat.execute(config)
         if args.analyze:
             print("Analysis module is still being hooked up")
+            pythia.analytics.execute(config)
