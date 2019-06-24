@@ -38,7 +38,7 @@ if __name__ == "__main__":
     else:
         config = pythia.config.load_config(args.config)
         if args.clean_work_dir:
-            print("Cleaning work directory")
+            print("Cleaning the work directory")
             import shutil
 
             shutil.rmtree(config["workDir"])
