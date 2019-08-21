@@ -36,3 +36,11 @@ def translate_coords_news(lat, lng):
     else:
         x = "{:.3f}W".format(abs(lat)).replace(".", "_")
     return y, x
+
+def translate_news_coords(news):
+    if news.endswith("N") or news.endswith("E"):
+        return news.replace("_", ".")[:-1]
+    else:
+        return "-{}".format(news.replace("_", ".")[:-1])
+
+    

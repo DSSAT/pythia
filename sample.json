@@ -23,6 +23,12 @@
     "dssat": {
         "executable": "~/dssat/dscsm047"
     },
+		"default_analytics": {
+			"per_pixel_prefix":"pp"
+		},
+		"analytics": [
+
+		],
     "runs": [
         {
             "name": "sorghum",

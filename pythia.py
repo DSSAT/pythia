@@ -48,6 +48,6 @@ if __name__ == "__main__":
         if args.all or args.run_dssat:
             print("Running DSSAT over the directory structure")
             pythia.dssat.execute(config)
-        if args.analyze:
-            print("Analysis module is still being hooked up")
+        if args.all or args.analyze:
+            print("Running simple analytics over DSSAT directory structure")
             pythia.analytics.execute(config)

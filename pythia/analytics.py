@@ -1,4 +1,5 @@
 import os
+import pythia.util
 
 
 def get_run_basedir(run, config):
@@ -13,16 +14,18 @@ def _generated_run_files(run_path, target_file):
 
 
 def extract_ll(path):
-    return tuple(path.split(os.path.sep)[-2:])
+    ll = path.split(os.path.sep)[-2:]
+    return tuple([pythia.util.translate_news_coords(l) for l in ll])
 
 
 def collateOutputs(run, config):
+    per_pixel_file_name = "{}_{}.csv".format(config.get("per_pixel_prefix", "pp"), run["name"])
     collected_first_line = False
     work_dir = get_run_basedir(run, config)
     for current_dir in _generated_run_files(work_dir, "summary.csv"):
         lat, lng = extract_ll(current_dir)
         with open(os.path.join(current_dir, "summary.csv")) as source, open(
-            os.path.join(work_dir, "pp.csv"), "a"
+            os.path.join(work_dir, per_pixel_file_name), "a"
         ) as dest:
             for i, line in enumerate(source):
                 if i == 0:
@@ -31,6 +34,10 @@ def collateOutputs(run, config):
                         collected_first_line = True
                 else:
                     dest.write("{},{},{}\n".format(lat, lng, line.strip()))
+
+
+def parse_analytics_config(runs, config):
+    pass
 
 
 def execute(config):
