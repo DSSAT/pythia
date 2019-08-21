@@ -32,6 +32,12 @@ def _generate_context_args(runs, peers, config):
 
 
 def symlink_wth_soil(output_dir, config, context):
+    if "include" in context:
+        for include in context["include"]:
+            if os.path.exists(include):
+                include_file = os.path.join(output_dir, os.path.basename(include))
+                if not os.path.exists(include_file):
+                    os.symlink(os.path.abspath(include), include_file)
     if "weatherDir" in config:
         weather_file = os.path.join(output_dir, "{}.WTH".format(context["wsta"]))
         if not os.path.exists(weather_file):
@@ -42,9 +48,7 @@ def symlink_wth_soil(output_dir, config, context):
     for soil in context["soilFiles"]:
         soil_file = os.path.join(output_dir, os.path.basename(soil))
         if not os.path.exists(soil_file):
-            os.symlink(
-                os.path.abspath(soil), os.path.join(output_dir, os.path.basename(soil))
-            )
+            os.symlink(os.path.abspath(soil), os.path.join(output_dir, os.path.basename(soil)))
 
 
 def compose_peerless(context, config, env):
@@ -56,12 +60,14 @@ def compose_peerless(context, config, env):
     xfile = pythia.template.render_template(env, context["template"], context)
     with open(os.path.join(this_output_dir, context["template"]), "w") as f:
         f.write(xfile)
+    return this_output_dir
 
 
 def execute(config):
     runs = config.get("runs", [])
     if len(runs) == 0:
         return
+    runlist = []
     peers = [pythia.io.peer(r, config.get("sample", None)) for r in runs]
     pool_size = config.get("threads", mp.cpu_count() * 10)
     print("RUNNING WITH POOL SIZE: {}".format(pool_size))
@@ -71,7 +77,10 @@ def execute(config):
             build_context, _generate_context_args(runs, peers, config), 250
         ):
             if context is not None:
-                compose_peerless(context, config, env)
+                runlist.append(os.path.abspath(compose_peerless(context, config, env)))
             else:
                 print("X", end="", flush=True)
+    if config["exportRunlist"]:
+        with open(os.path.join(config["workDir"], "run_list.txt"), "w") as f:
+            [f.write(f"{x}\n") for x in runlist]
     print()
