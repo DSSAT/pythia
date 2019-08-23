@@ -1,39 +1,35 @@
-import logging
-
 from jinja2 import Environment, FileSystemLoader
 import pythia.util
 
 _t_formats = {
-    "ingeno":  {"length": 6},
-    "cname":   {"fmt": ""},  # leave alone
-    "wsta":    {"align":":<", "length": 8},
-    "id_soil": {"align":":<", "length": 10},
-    "xcrd":    {"fmt": ":>15.3f"},
-    "ycrd":    {"fmt": ":>15.3f"},
-    "icrt":    {"length": 6},
-    "icres":   {"length": 6},
-    "icren":   {"length": 6},
-    "icbl":    {"length": 6},
-    "sh2o":    {"length": 6},
-    "snh4":    {"length": 6},
-    "sno3":    {"length": 6},
-    "fdate":   {"length": 5},
-    "fdap":    {"length": 5},
-    "famn":    {"length": 6},
-    "ramt":    {"length": 6},
-    "sdate":   {"length": 5},
-    "nyers":   {"length": 5},
-    "flhst":   {"length": 5},
-    "fhdur":   {"length": 5}
+    "ingeno": {"length": 6},
+    "cname": {"fmt": ""},  # leave alone
+    "wsta": {"align": ":<", "length": 8},
+    "id_soil": {"align": ":<", "length": 10},
+    "xcrd": {"fmt": ":>15.3f"},
+    "ycrd": {"fmt": ":>15.3f"},
+    "icrt": {"length": 6},
+    "icres": {"length": 6},
+    "icren": {"length": 6},
+    "icbl": {"length": 6},
+    "sh2o": {"length": 6},
+    "snh4": {"length": 6},
+    "sno3": {"length": 6},
+    "fdate": {"length": 5},
+    "fdap": {"length": 5},
+    "famn": {"length": 6},
+    "ramt": {"length": 6},
+    "sdate": {"length": 5},
+    "nyers": {"length": 5},
+    "flhst": {"length": 5},
+    "fhdur": {"length": 5},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast"]
 
 
 def init_engine(template_dir):
-    return Environment(
-        loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
-    )
+    return Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True)
 
 
 def auto_format_dict(d):

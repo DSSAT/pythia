@@ -45,10 +45,9 @@ def display_async(details):
 
 def execute(config):
     pool_size = config.get("cores", mp.cpu_count())
-    results = []
-    l = _generate_run_list(config)
+    run_list = _generate_run_list(config)
     with Pool(processes=pool_size) as pool:
-        for details in l:  # _generate_run_list(config):
+        for details in run_list:  # _generate_run_list(config):
             pool.apply_async(_run_dssat, (details, config), callback=display_async)
         pool.close()
         pool.join()

@@ -59,9 +59,7 @@ def generate_ic_layers(k, run, context, _):
         profile = args[0][1:]
     else:
         profile = args[0]
-    soil_file = pythia.soil_handler.findSoilProfile(
-        context[profile], context["soilFiles"]
-    )
+    soil_file = pythia.soil_handler.findSoilProfile(context[profile], context["soilFiles"])
     layers = pythia.soil_handler.readSoilLayers(context[profile], soil_file)
     calculated_layers = pythia.soil_handler.calculateICLayerData(layers, run)
     layer_labels = ["icbl", "sh2o", "snh4", "sno3"]
@@ -83,10 +81,7 @@ def lookup_ghr(k, run, context, config):
             if id_soil and id_soil[0].strip() != "":
                 id_soil = id_soil[0]
                 sol_file = "{}.SOL".format(id_soil[:2].upper())
-                return {
-                    k: id_soil,
-                    "soilFiles": [os.path.join(config["ghr_root"], sol_file)],
-                }
+                return {k: id_soil, "soilFiles": [os.path.join(config["ghr_root"], sol_file)]}
             else:
                 logging.error("Soil NOT found")
                 logging.error(context)
@@ -99,12 +94,10 @@ def split_fert_dap_percent(k, run, context, _):
         total = run[args[0][1:]]
     else:
         total = float(args[0])
-    splits = int(args[1])
+    # splits = int(args[1])
     split_amounts = args[2:]
     if any(n.startswith("-") for n in split_amounts):
-        logging.error(
-            "No arguments for split_applications_dap_percent should be negative"
-        )
+        logging.error("No arguments for split_applications_dap_percent should be negative")
         return None
     daps = [int(i) for i in split_amounts[0::2]]
     percents = [float(i) / 100.0 for i in split_amounts[1::2]]
@@ -112,9 +105,7 @@ def split_fert_dap_percent(k, run, context, _):
         logging.error("Not enough arguments for split_applications_dap_percent")
         return None
     if sum(percents) != 1.0:
-        logging.error(
-            "The sum of all percents needs to be 100 in split_applications_dap_percent"
-        )
+        logging.error("The sum of all percents needs to be 100 in split_applications_dap_percent")
         logging.error(percents)
         return None
     if len(daps) != len(set(daps)):

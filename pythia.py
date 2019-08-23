@@ -34,7 +34,7 @@ if __name__ == "__main__":
         parser.print_help()
     else:
         config = pythia.config.load_config(args.config)
-        
+
         if args.clean_work_dir:
             print("Cleaning the work directory")
             import shutil
