@@ -9,7 +9,7 @@ import pythia.util
 """longitude/latitude"""
 
 
-def _get_site_raster_value(dataset, band, site):
+def get_site_raster_value(dataset, band, site):
     y, x = site
     row, col = dataset.index(y, x)
     return band[row, col]
@@ -28,7 +28,7 @@ def peer(run, sample_size=None):
             else:
                 nodata.append(ds.nodatavals[0])
             band = ds.read(1)
-            data.append([_get_site_raster_value(ds, band, site)
+            data.append([get_site_raster_value(ds, band, site)
                          for site in sites])
     peerless = list(filter(lambda x: x is not None, [read_layer_by_cell(
         i, data, nodata, layers, sites) for i in range(len(sites))]))
@@ -42,7 +42,10 @@ def read_layer_by_cell(idx, data, nodata, layers, sites):
         if c[idx] == nodata[i]:
             return None
         else:
-            cell[layers[i]] = c[idx]
+            if layers[i] == "harvestArea" and c[idx] == 0:
+                return None
+            else:
+                cell[layers[i]] = c[idx]
     return cell
 
 
