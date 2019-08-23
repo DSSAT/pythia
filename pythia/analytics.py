@@ -55,7 +55,7 @@ def collateOutputs(run, config):
                         if i == 0:
                             if not collected_first_line:
                                 dest.write(
-                                    "LATITUDE,LONGITUDE,HARVEST AREA,RUN NAME,{}\n".format(
+                                    "LATITUDE,LONGITUDE,HARVEST_AREA,RUN_NAME,{}\n".format(
                                         line.strip()
                                     )
                                 )
