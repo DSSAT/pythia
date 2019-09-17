@@ -23,6 +23,8 @@ _t_formats = {
     "nyers": {"length": 5},
     "flhst": {"length": 5},
     "fhdur": {"length": 5},
+    "irrig": {"length": 5},
+    "erain": {"length": 5}
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast"]
