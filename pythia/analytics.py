@@ -55,7 +55,7 @@ def calculate_columns(config, outputs):
     funs = pythia.analytic_functions.generate_funs(calculations)
     arg_columns = []
     for fun in funs:
-        for a in fun['args']:
+        for a in fun["args"]:
             if a.startswith("$"):
                 if a.upper() not in arg_columns:
                     arg_columns.append(a[1::].upper())
@@ -80,11 +80,18 @@ def calculate_columns(config, outputs):
                     num_cols = len(line)
                     col_indexes = [line.index(x) for x in arg_columns]
                     for fun in funs:
-                        line.append(fun['key'])
+                        line.append(fun["key"])
                     dssat_out.writerow(line)
                 else:
                     for fun in funs:
-                        line.append(fun['fun']([line[col_indexes[arg_columns.index(x[1::].upper())]] for x in fun['args']]))
+                        line.append(
+                            fun["fun"](
+                                [
+                                    line[col_indexes[arg_columns.index(x[1::].upper())]]
+                                    for x in fun["args"]
+                                ]
+                            )
+                        )
                     dssat_out.writerow(line)
             out_files.append(out_file)
     return out_files

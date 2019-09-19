@@ -18,6 +18,10 @@ def xy_from_vector(v):
     return pythia.io.extract_vector_coords(args[1])
 
 
+def xy_from_list(l):
+    return [tuple(x[::-1]) for x in l]
+
+
 def auto_planting_window(k, run, context, _):
     """multiple rasters not yet supported"""
     args = run[k].split("::")[1:]
@@ -45,12 +49,16 @@ def lookup_hc27(k, run, context, _):
 
 def lookup_wth(k, run, context, _):
     args = run[k].split("::")[1:]
+    if isinstance(run["sites"], list):
+        finder = pythia.io.find_closest_vector_coords
+    else:
+        finder = pythia.io.find_vector_coords
     if "vector" in args:
         idx = args.index("vector")
-        cell_id = pythia.io.find_vector_coords(
+        cell_id = finder(
             args[idx + 1], context["lng"], context["lat"], args[idx + 2]
         )
-        return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
+    return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
 
 
 def generate_ic_layers(k, run, context, _):

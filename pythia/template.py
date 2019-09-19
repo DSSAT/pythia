@@ -49,7 +49,7 @@ def auto_format_dict(d):
                 fmt_align = _t_formats[k].get("align", ":>")
                 fmt_pad = _t_formats[k].get("pad_with", "")
                 if isinstance(v, float):
-                    fmt_len = "{}.1f".format(_t_formats[k]["length"])
+                    fmt_len = "{}.2f".format(_t_formats[k]["length"])
                 elif isinstance(v, int):
                     fmt_len = "{}d".format(_t_formats[k]["length"])
                 else:
@@ -62,7 +62,10 @@ def auto_format_dict(d):
         elif isinstance(v, dict):
             clean[k] = auto_format_dict(v)
         elif isinstance(v, list) and not isinstance(v, str):
-            clean[k] = [auto_format_dict(intern) for intern in v]
+            if k == "sites":
+                continue
+            else:
+                clean[k] = [auto_format_dict(intern) for intern in v]
         else:
             clean[k] = v
     return clean
