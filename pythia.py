@@ -1,4 +1,5 @@
 import logging
+import os
 
 import pythia.config
 import pythia.dssat
@@ -36,10 +37,12 @@ if __name__ == "__main__":
         config = pythia.config.load_config(args.config)
 
         if args.clean_work_dir:
-            print("Cleaning the work directory")
-            import shutil
 
-            shutil.rmtree(config["workDir"])
+            print("Cleaning the work directory")
+            if os.path.exists(config["workDir"]):
+                import shutil
+
+                shutil.rmtree(config["workDir"])
 
         config["exportRunlist"] = args.export_runlist
         if args.all or args.setup:
