@@ -116,12 +116,20 @@ def calculateWeightingFactor(slbdm, thickness, df):
     return [slbdm[i] * thickness[i] * df[i] for i in range(len(slbdm))]
 
 
+def calculateSoilLayerMass(slbdm, thickness):
+    return sum([slbdm[i] * thickness[i] * 100000 for i in range(len(slbdm))])
+
+
+def calculateNConcentration(n, mass):
+    return (n / mass) * 1000000
+
+
 def calculateICNTOT(wf, n, twf):
     return [f * n / twf for f in wf]
 
 
-def calculateNDist(icn, sbdm, thickness):
-    return [icn[i] / sbdm[i] / thickness[i] for i in range(len(icn))]
+def calculateNDist(nconc, sbdm):
+    return [nconc] * len(sbdm)
 
 
 def calculateH2O(fractionalAW, slll, sdul):
@@ -139,23 +147,14 @@ def calculateICLayerData(soilData, run):
     sdul = [float(v) for v in soilData["SDUL"]]
 
     thickness = calculateSoilThickness(slb)
-    mp = calculateSoilMidpoint(slb)
-    tf = calculateTopFrac(slb, thickness)
-    bf = calculateBotFrac(slb, thickness)
-    mf = calculateMidFrac(tf, bf)
-    df = calculateDepthFactor(mp, tf, mf)
-    wf = calculateWeightingFactor(sbdm, thickness, df)
-
-    # tsbdm = sum([thickness[i] * sbdm[i] for i in range(len(thickness))])
-    twf = sum(wf)
-    ictot = calculateICNTOT(wf, run["icin"], twf)
-    icndist = calculateNDist(ictot, sbdm, thickness)
+    soil_mass = calculateSoilLayerMass(sbdm, thickness)
+    nconc = calculateNConcentration(run["icin"], soil_mass)
+    icndist = calculateNDist(nconc, sbdm)
 
     return transpose(
         [
             soilData["SLB"],
             calculateH2O(run["icsw%"], slll, sdul),
-            [icnd * 10 * 0.1 for icnd in icndist],
-            [icnd * 10 * 0.9 for icnd in icndist],
-        ]
-    )
+            [icnd * 0.1 for icnd in icndist],
+            [icnd * 0.9 for icnd in icndist],
+        ])
