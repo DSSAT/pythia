@@ -68,6 +68,8 @@ def execute(config):
     if len(runs) == 0:
         return
     runlist = []
+    for run in runs:
+        pythia.io.make_run_directory(os.path.join(config["workDir"], run["name"]))
     peers = [pythia.io.peer(r, config.get("sample", None)) for r in runs]
     pool_size = config.get("threads", mp.cpu_count() * 10)
     print("RUNNING WITH POOL SIZE: {}".format(pool_size))
