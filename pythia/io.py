@@ -83,8 +83,8 @@ def extract_vector_coords(f):
     return points
 
 
-def find_vector_coords(f, x, y, a):
-    coords = (x, y)
+def find_vector_coords(f, lng, lat, a):
+    coords = (lng, lat)
     with fiona.open(f) as source:
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":
