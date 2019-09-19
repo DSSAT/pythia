@@ -103,20 +103,21 @@ def combine_outputs(config, outputs):
     out_dir = config.get("workDir", ".")
     collected_first_line = False
     for current_file in outputs:
-        if collected_first_line:
-            mode = "a"
-        else:
-            mode = "w"
-        with open(current_file) as source, open(
-            os.path.join(out_dir, combined_file_name), mode
-        ) as dest:
-            for i, line in enumerate(source):
-                if i == 0:
-                    if not collected_first_line:
+        if os.path.exists(current_file):
+            if collected_first_line:
+                mode = "a"
+            else:
+                mode = "w"
+            with open(current_file) as source, open(
+                os.path.join(out_dir, combined_file_name), mode
+            ) as dest:
+                for i, line in enumerate(source):
+                    if i == 0:
+                        if not collected_first_line:
+                            dest.write(line)
+                            collected_first_line = True
+                    else:
                         dest.write(line)
-                        collected_first_line = True
-                else:
-                    dest.write(line)
 
 
 def collate_outputs(config, run):
