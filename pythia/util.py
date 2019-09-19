@@ -36,13 +36,13 @@ def translate_coords_news(lat, lng):
     y = ""
     x = ""
     if lng >= 0:
-        y = "{:.3f}N".format(lng).replace(".", "_")
+        y = "{:.3f}N".format(lat).replace(".", "_")
     else:
-        y = "{:.3f}S".format(abs(lng)).replace(".", "_")
-    if lat >= 0:
-        x = "{:.3f}E".format(lat).replace(".", "_")
+        y = "{:.3f}S".format(abs(lat)).replace(".", "_")
+    if lng >= 0:
+        x = "{:.3f}E".format(lng).replace(".", "_")
     else:
-        x = "{:.3f}W".format(abs(lat)).replace(".", "_")
+        x = "{:.3f}W".format(abs(lng)).replace(".", "_")
     return y, x
 
 
