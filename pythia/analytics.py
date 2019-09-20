@@ -128,9 +128,9 @@ def collate_outputs(config, run):
     work_dir = get_run_basedir(config, run)
     out_file = os.path.join(work_dir, per_pixel_file_name)
     harea_info = run.get("harvestArea", None)
+    collected_first_line = False
     for current_dir in _generated_run_files(work_dir, "summary.csv"):
         lat, lng = extract_ll(current_dir)
-        collected_first_line = False
         if collected_first_line:
             mode = "a"
         else:
