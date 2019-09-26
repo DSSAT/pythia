@@ -12,6 +12,8 @@ def build_context(args):
     run, ctx, config = args
     context = run.copy()
     context = {**context, **ctx}
+    y, x = pythia.util.translate_coords_news(context["lat"], context["lng"])
+    context["contextWorkDir"] = os.path.join(context["workDir"], y, x)
     for k, v in run.items():
         if "::" in str(v) and k != "sites":
             fn = v.split("::")[0]
@@ -53,8 +55,7 @@ def symlink_wth_soil(output_dir, config, context):
 
 def compose_peerless(context, config, env):
     print(".", end="", flush=True)
-    y, x = pythia.util.translate_coords_news(context["lat"], context["lng"])
-    this_output_dir = os.path.join(context["workDir"], y, x)
+    this_output_dir = context["contextWorkDir"]    
     pythia.io.make_run_directory(this_output_dir)
     symlink_wth_soil(this_output_dir, config, context)
     xfile = pythia.template.render_template(env, context["template"], context)
