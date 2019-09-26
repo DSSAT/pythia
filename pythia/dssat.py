@@ -43,7 +43,7 @@ def display_async(details):
         print(".", end="", flush=True)
 
 
-def execute(config):
+def execute(config, plugins):
     pool_size = config.get("cores", mp.cpu_count())
     run_list = _generate_run_list(config)
     with Pool(processes=pool_size) as pool:

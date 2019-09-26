@@ -163,7 +163,7 @@ def collate_outputs(config, run):
     return out_file
 
 
-def execute(config):
+def execute(config, plugins):
     runs = config.get("runs", [])
     analytics_config = config.get("analytics_setup", None)
     run_outputs = []

@@ -6,6 +6,7 @@ import pythia.dssat
 import pythia.analytics
 import pythia.io
 import pythia.peerless
+import pythia.plugin
 
 logging.getLogger("pythia_app")
 logging.basicConfig(level=logging.INFO, filename="pythia.log", filemode="w")
@@ -45,12 +46,14 @@ if __name__ == "__main__":
                 shutil.rmtree(config["workDir"])
 
         config["exportRunlist"] = args.export_runlist
+        plugins = {}
+        pythia.plugin.load_plugins(config, plugins)
         if args.all or args.setup:
             print("Setting up points and directory structure")
-            pythia.peerless.execute(config)
+            pythia.peerless.execute(config, plugins)
         if args.all or args.run_dssat:
             print("Running DSSAT over the directory structure")
-            pythia.dssat.execute(config)
+            pythia.dssat.execute(config, plugins)
         if args.all or args.analyze:
             print("Running simple analytics over DSSAT directory structure")
-            pythia.analytics.execute(config)
+            pythia.analytics.execute(config, plugins)
