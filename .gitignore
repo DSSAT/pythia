@@ -6,3 +6,4 @@ pythia/__pycache__/*
 *.pyc
 work/*
 *.log
+.pytest_cache/*

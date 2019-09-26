@@ -46,8 +46,7 @@ if __name__ == "__main__":
                 shutil.rmtree(config["workDir"])
 
         config["exportRunlist"] = args.export_runlist
-        plugins = {}
-        pythia.plugin.load_plugins(config, plugins)
+        plugins = pythia.plugin.load_plugins(config, {})
         if args.all or args.setup:
             print("Setting up points and directory structure")
             pythia.peerless.execute(config, plugins)

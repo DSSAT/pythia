@@ -1,3 +1,4 @@
+import logging
 import multiprocessing as mp
 import os
 
@@ -82,6 +83,7 @@ def execute(config, plugins):
         ):
             if context is not None:
                 # Post context hook
+                logging.debug("[PEERLESS] Running post_build_context plugins")
                 context = pythia.plugin.run_plugin_functions(
                     pythia.plugin.PluginHook.post_build_context, plugins, context=context
                 )
