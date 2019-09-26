@@ -81,7 +81,7 @@ def load_plugins(config, plugins={}, module_prefix="pythia.plugins"):
         # TODO: Check to see if the plugin conforms to the correct signature (optional)
 
         # Call plugin initialization
-        _imported = _loaded.initialize(plugin.get("params", {}), _imported)
+        _imported = _loaded.initialize(plugin.get("params", {}), _imported, config)
     return _imported
 
 
