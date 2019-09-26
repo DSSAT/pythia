@@ -77,3 +77,15 @@ def test_plugin_auto_execution():
     assert context1 != context
     assert context1["context_value"] == 8
     assert context2["context_value"] == 3
+
+
+def test_no_plugin_does_not_change_context():
+    config = {"plugins": [{"plugin": "test_plugin", "params": {}}]}
+    plugins = {}
+    plugins1 = load_plugins(config, plugins)
+    context = {"hello": "there"}
+    context1 = run_plugin_functions(PluginHook.post_build_context, plugins, context=context)
+    assert context == context1
+    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1, context=context)
+    assert context1 != context2
+    assert(context2 == {**context, **{"context_value": 3}})

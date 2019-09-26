@@ -86,16 +86,13 @@ def load_plugins(config, plugins={}, module_prefix="pythia.plugins"):
 
 
 def run_plugin_functions(hook, plugins, **kwargs):
+    _return = {}
+    if hook == PluginHook.post_build_context:
+        _return = {**kwargs.get("context", {})}
     if hook in plugins:
         for plugin_fun in plugins[hook]:
             if hook == PluginHook.post_config:
-                _value = plugin_fun["fun"](plugin_fun.get("config", {}))
+                _return = plugin_fun["fun"](plugin_fun.get("config", {}))
             elif hook == PluginHook.post_build_context:
-                context = kwargs.get("context", {})
-                _context = {**context}
-                _context = plugin_fun["fun"](plugin_fun.get("config", {}), _context)
-        
-        if hook == PluginHook.post_config:
-            return _value
-        elif hook == PluginHook.post_build_context:
-            return _context
+                _return = {**_return, **plugin_fun["fun"](plugin_fun.get("config", {}), _return)}
+    return _return

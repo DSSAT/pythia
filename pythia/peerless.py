@@ -56,8 +56,9 @@ def symlink_wth_soil(output_dir, config, context):
 
 def compose_peerless(context, config, env):
     print(".", end="", flush=True)
-    pythia.io.make_run_directory(context["contextWorkDir"])
-    symlink_wth_soil(context["contextWorkDir"], config, context)
+    this_output_dir = context["contextWorkDir"]
+    pythia.io.make_run_directory(this_output_dir)
+    symlink_wth_soil(this_output_dir, config, context)
     xfile = pythia.template.render_template(env, context["template"], context)
     with open(os.path.join(context["contextWorkDir"], context["template"]), "w") as f:
         f.write(xfile)
