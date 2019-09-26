@@ -68,7 +68,7 @@ def load_plugins(config, plugins={}, module_prefix="pythia.plugins"):
     import importlib.util
 
     for plugin in plugin_config:
-        logging.info("Plug in found")
+        logging.info("[PLUGIN] Plug in {} found".format(plugin["plugin"]))
         if "plugin" not in plugin:
             logging.warning("[PLUGIN] Invalid plugin configuration: {}".format(plugin))
             continue
