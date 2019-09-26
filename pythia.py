@@ -9,6 +9,7 @@ import pythia.peerless
 
 logging.getLogger("pythia_app")
 logging.basicConfig(level=logging.INFO, filename="pythia.log", filemode="w")
+pythiaVersion = '2.0.0'
 
 if __name__ == "__main__":
     import argparse
