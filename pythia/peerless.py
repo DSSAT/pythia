@@ -58,7 +58,6 @@ def symlink_wth_soil(output_dir, config, context):
 def compose_peerless(context, config, env):
     print(".", end="", flush=True)
     this_output_dir = context["contextWorkDir"]
-    pythia.io.make_run_directory(this_output_dir)
     symlink_wth_soil(this_output_dir, config, context)
     xfile = pythia.template.render_template(env, context["template"], context)
     with open(os.path.join(context["contextWorkDir"], context["template"]), "w") as f:
@@ -82,6 +81,7 @@ def execute(config, plugins):
             build_context, _generate_context_args(runs, peers, config), 250
         ):
             if context is not None:
+                pythia.io.make_run_directory(context["contextWorkDir"])
                 # Post context hook
                 logging.debug("[PEERLESS] Running post_build_context plugins")
                 context = pythia.plugin.run_plugin_functions(
