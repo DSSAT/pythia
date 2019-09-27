@@ -38,9 +38,6 @@ def construct_pixel_forecast(config={}, context={}):
     """TODO: Fix the wrap around case for leap years"""
     
     logging.debug("[SIMPLE WEATHER FORECAST PLUGIN] Running construct_pixel_forecast()")
-    # Load the file
-    logging.info(config)
-    logging.info(context)
     source_weather = os.path.join(config["weatherDir"], context["wthFile"])
     dest_weather = os.path.join(context["contextWorkDir"], "{}.WTH".format(config["wsta"]))
     target_lines = []
@@ -72,13 +69,6 @@ def construct_pixel_forecast(config={}, context={}):
             if in_target and doy == config["end_on"]:
                 in_target = False
                 wrote_target = False
-    # Read from start_date to end_date (+1 intentionally for leap_years)
-    # Open new file
-    # Write any pre-start records
-    # Write start->end records
-    # Write post-end records
-    # Change the wsta in context (make sure it is actually changed)
-    # Add skip_wth_symlink to context
     _new_context = {}
     _new_context["wsta"] = config["wsta"]
     return _new_context
