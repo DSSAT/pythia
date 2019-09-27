@@ -1,5 +1,3 @@
-import calendar
-import datetime
 import logging
 import os
 from pythia.plugin import PluginHook, register_plugin_function
@@ -21,7 +19,9 @@ import pythia.util
 def initialize(config, plugins, full_config):
     logging.info("[SIMPLE WEATHER FORECAST PLUGIN] Initializing plugin")
     config["weatherDir"] = full_config["weatherDir"]
-    config["start_date"] = pythia.util.to_julian_date(pythia.util.from_iso_date(config["start_date"]))
+    config["start_date"] = pythia.util.to_julian_date(
+        pythia.util.from_iso_date(config["start_date"])
+    )
     config["end_date"] = pythia.util.to_julian_date(pythia.util.from_iso_date(config["end_date"]))
     config["start_on"] = config["start_date"][2:5]
     config["end_on"] = config["end_date"][2:5]
@@ -36,7 +36,7 @@ def construct_pixel_forecast(config={}, context={}):
        creation of the symlinks further along the process."""
 
     """TODO: Fix the wrap around case for leap years"""
-    
+
     logging.debug("[SIMPLE WEATHER FORECAST PLUGIN] Running construct_pixel_forecast()")
     # Load the file
     logging.info(config)
