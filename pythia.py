@@ -47,6 +47,9 @@ if __name__ == "__main__":
 
         config["exportRunlist"] = args.export_runlist
         plugins = pythia.plugin.load_plugins(config, {})
+        config = pythia.plugin.run_plugin_functions(
+            pythia.plugin.PluginHook.post_config, plugins, full_config=config
+        )
         if args.all or args.setup:
             print("Setting up points and directory structure")
             pythia.peerless.execute(config, plugins)
