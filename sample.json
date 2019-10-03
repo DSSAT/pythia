@@ -2,33 +2,70 @@
     "name": "example",
     "workDir": "work/unity",
     "templateDir": "data/templates",
-    "weatherDir":"data/weathers",
+    "weatherDir": "data/weathers",
     "threads": 8,
+    "cores": 16,
     "sample": 10,
+    "ghr_root": "data/base/eGHR",
+    "plugins": [
+        {
+            "plugin": "weather_forecast_simple",
+            "params": {
+                "start_date": "2018-01-01",
+                "end_date": "2018-04-30:",
+                "wsta": "SSUF"
+            }
+        }
+    ],
     "default_setup": {
         "template": "SORG8433.SNX",
+        "include": [
+            "data/includes/MZCER047.CUL"
+        ],
         "sites": "xy_from_vector::data/shapes/unity_sites.shp",
-        "soilFiles": ["data/base/HC.SOL"],
         "startYear": 1984,
-        "initialN": 5,
-        "fractionalAW": 0.25,
+        "icin": 5,
+        "icsw%": 0.25,
         "icrt": 5,
         "icres": 10,
         "icren": 0.8,
-        "autoPlant": "auto_planting_window::raster::data/rasters/unity_planting_month.tif::1::45",
-        "id_soil": "lookup_hc27::raster::data/rasters/unity_hc27.tif",
+        "sdate": "1984-01-01",
+        "pfrst": "1984-03-01",
+        "plast": "1984-05-20",
+        "id_soil": "lookup_ghr::raster::data/rasters/unity_ghr.tif",
         "wsta": "lookup_wth::SSUD::vector::data/shapes/unity_sites.shp::CellID",
-        "ic_layers":"generate_ic_layers::$id_soil"
+        "ic_layers": "generate_ic_layers::$id_soil",
+        "ramt": 0,
+        "fen_tot": 100.0,
+        "fertilizers": "split_fert_dap_percent::$fe"
     },
     "dssat": {
-        "executable": "~/dssat/dscsm047"
+        "executable": "/usr/local/dssat47/dscsm047"
     },
-		"default_analytics": {
-			"per_pixel_prefix":"pp"
-		},
-		"analytics": [
-
-		],
+    "default_analytics": {
+        "per_pixel_prefix": "pp",
+        "singleOutput": true,
+        "calculatedColumns": {
+            "VNAM": "subtract::$cnam::$gnam",
+            "VWAM": "subtract::$cwam::$pwam"
+        },
+        "columns": [
+            "LATITUDE",
+            "LONGITUDE",
+            "HARVEST_AREA",
+            "RUN_NAME",
+            "CR",
+            "PDAT",
+            "MDAT",
+            "HDAT",
+            "HWAH",
+            "GNAM",
+            "CWAM",
+            "PRCP",
+            "VNAM",
+            "VWAM"
+        ]
+    },
     "runs": [
         {
             "name": "sorghum",
