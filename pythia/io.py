@@ -106,7 +106,7 @@ def find_closest_vector_coords(f, lng, lat, a):
                 ids.extend([feature["properties"][a]] * len(feature["geometry"]["coordinates"]))
             if feature["geometry"]["type"] == "Point":
                 points.append(
-                    feature["geometry"]["coordinates"][0], feature["geometry"]["coordinates"][1]
+                    Point(feature["geometry"]["coordinates"][0], feature["geometry"]["coordinates"][1])
                 )
                 ids.append(feature["properties"][a])
     mp = MultiPoint(points)
