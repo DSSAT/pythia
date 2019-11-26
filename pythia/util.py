@@ -7,6 +7,10 @@ def to_julian_date(d):
     return d.strftime("%y%j")
 
 
+def to_iso_date(d):
+    return d.strftime("%Y-%m-%d")
+
+
 def from_julian_date(s):
     return datetime.datetime.strptime(s, "%y%j").date()
 

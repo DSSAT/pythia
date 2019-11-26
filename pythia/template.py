@@ -27,7 +27,7 @@ _t_formats = {
     "erain": {"length": 5}
 }
 
-_t_date_fields = ["sdate", "fdate", "pfrst", "plast"]
+_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate"]
 
 
 def init_engine(template_dir):
