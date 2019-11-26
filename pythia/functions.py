@@ -33,9 +33,9 @@ def auto_planting_window(k, run, context, _):
     td = datetime.timedelta(days=vals[2])
     last = first + td
     return {
-        "pdate": pythia.util.to_julian_date(first),
-        "pfrst": pythia.util.to_julian_date(first),
-        "plast": pythia.util.to_julian_date(last),
+        "pdate": first,
+        "pfrst": first,
+        "plast": last,
     }
 
 
