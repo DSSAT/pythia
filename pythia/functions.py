@@ -125,3 +125,22 @@ def split_fert_dap_percent(k, run, context, _):
         app_dap = daps[i]
         out.append({"fdap": app_dap, "famn": app_total})
     return {k: out}
+
+
+def assign_by_raster_value(k, run, context, _):
+    init_args = run[k].split("::")[1:]
+    if "raster" in init_args:
+        args = init_args[init_args.index("raster")+2:]
+    else:
+        logging.error("Need to specify a raster for assign_by_value")
+        return None
+    raster_val = [int(i) for i in args[0::2]]
+    assignment = args[1::2]
+    if len(raster_val) != len(assignment):
+        logging.error("The values and assignments don't pair up in assign_by_raster_value")
+        return None
+    if context[k] in raster_val:
+        rv_idx = raster_val.index(context[k])
+        return {k: assignment[rv_idx]}
+    else:
+        return {k: ""}
