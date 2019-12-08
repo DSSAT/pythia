@@ -143,4 +143,4 @@ def assign_by_raster_value(k, run, context, _):
         rv_idx = raster_val.index(context[k])
         return {k: assignment[rv_idx]}
     else:
-        return {k: ""}
+        return None
