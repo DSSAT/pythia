@@ -37,25 +37,29 @@ if __name__ == "__main__":
     else:
         config = pythia.config.load_config(args.config)
 
-        if args.clean_work_dir:
+        logging.info(config)
 
-            print("Cleaning the work directory")
-            if os.path.exists(config["workDir"]):
-                import shutil
+        if args is None:
+            print("Invalid configuration file")
+        else:
+            if args.clean_work_dir:
+                print("Cleaning the work directory")
+                if os.path.exists(config["workDir"]):
+                    import shutil
 
-                shutil.rmtree(config["workDir"])
+                    shutil.rmtree(config["workDir"])
 
-        config["exportRunlist"] = args.export_runlist
-        plugins = pythia.plugin.load_plugins(config, {})
-        config = pythia.plugin.run_plugin_functions(
-            pythia.plugin.PluginHook.post_config, plugins, full_config=config
-        )
-        if args.all or args.setup:
-            print("Setting up points and directory structure")
-            pythia.peerless.execute(config, plugins)
-        if args.all or args.run_dssat:
-            print("Running DSSAT over the directory structure")
-            pythia.dssat.execute(config, plugins)
-        if args.all or args.analyze:
-            print("Running simple analytics over DSSAT directory structure")
-            pythia.analytics.execute(config, plugins)
+            config["exportRunlist"] = args.export_runlist
+            plugins = pythia.plugin.load_plugins(config, {})
+            config = pythia.plugin.run_plugin_functions(
+                pythia.plugin.PluginHook.post_config, plugins, full_config=config
+            )
+            if args.all or args.setup:
+                print("Setting up points and directory structure")
+                pythia.peerless.execute(config, plugins)
+            if args.all or args.run_dssat:
+                print("Running DSSAT over the directory structure")
+                pythia.dssat.execute(config, plugins)
+            if args.all or args.analyze:
+                print("Running simple analytics over DSSAT directory structure")
+                pythia.analytics.execute(config, plugins)
