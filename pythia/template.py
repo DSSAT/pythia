@@ -17,7 +17,7 @@ _t_formats = {
     "sno3": {"length": 6},
     "fdate": {"length": 5},
     "fdap": {"length": 5},
-    "famn": {"length": 6},
+    "famn": {"length": 5},
     "ramt": {"length": 6},
     "sdate": {"length": 5},
     "nyers": {"length": 5},
@@ -49,7 +49,7 @@ def auto_format_dict(d):
                 fmt_align = _t_formats[k].get("align", ":>")
                 fmt_pad = _t_formats[k].get("pad_with", "")
                 if isinstance(v, float):
-                    fmt_len = "{}.2f".format(_t_formats[k]["length"])
+                    fmt_len = "{}.1f".format(_t_formats[k]["length"])
                 elif isinstance(v, int):
                     fmt_len = "{}d".format(_t_formats[k]["length"])
                 else:
