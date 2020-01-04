@@ -24,7 +24,7 @@ _t_formats = {
     "flhst": {"length": 5},
     "fhdur": {"length": 5},
     "irrig": {"length": 5},
-    "erain": {"length": 5}
+    "erain": {"raw": "M{:>4}"}
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate"]
@@ -43,7 +43,9 @@ def auto_format_dict(d):
             clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
         elif k in _t_formats:
             fmt = ""
-            if "fmt" in _t_formats[k]:
+            if  "raw" in _t_formats[k]:
+                fmt = _t_formats[k]["raw"]
+            elif "fmt" in _t_formats[k]:
                 fmt = "{" + _t_formats[k]["fmt"] + "}"
             else:
                 fmt_align = _t_formats[k].get("align", ":>")
