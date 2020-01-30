@@ -39,7 +39,7 @@ def get_rasters_dict(iterator):
 def translate_coords_news(lat, lng):
     y = ""
     x = ""
-    if lng >= 0:
+    if lat >= 0:
         y = "{:.3f}N".format(lat).replace(".", "_")
     else:
         y = "{:.3f}S".format(abs(lat)).replace(".", "_")

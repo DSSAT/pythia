@@ -36,10 +36,7 @@ if __name__ == "__main__":
         parser.print_help()
     else:
         config = pythia.config.load_config(args.config)
-
-        logging.info(config)
-
-        if args is None:
+        if args is None or not config:
             print("Invalid configuration file")
         else:
             if args.clean_work_dir:

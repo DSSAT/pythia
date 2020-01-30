@@ -51,6 +51,7 @@ def _validate_config(config):
     for r in rasters:
         current_return, cached_crs = _check_raster_profile(r, cached_crs)
         if valid and not current_return:
+            logging.error(r)
             valid = False
     # Vector check pass 1 - all files are available and of the same projections
     return valid
