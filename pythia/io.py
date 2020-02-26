@@ -14,7 +14,12 @@ import pythia.util
 def get_site_raster_value(dataset, band, site):
     lng, lat = site
     row, col = dataset.index(lng, lat)
-    return band[row, col]
+    data = []
+    try:
+        data = band[row, col]
+    except IndexError:
+        data = None
+    return data
 
 
 def peer(run, sample_size=None):
@@ -45,6 +50,8 @@ def peer(run, sample_size=None):
 
 
 def read_layer_by_cell(idx, data, nodata, layers, sites):
+    if data is None:
+        return None
     lng, lat = sites[idx]
     cell = {"lat": lat, "lng": lng, "xcrd": lng, "ycrd": lat}
     for i, c in enumerate(data):
