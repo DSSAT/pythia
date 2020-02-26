@@ -24,7 +24,7 @@ _t_formats = {
     "flhst": {"length": 5},
     "fhdur": {"length": 5},
     "irrig": {"length": 5},
-    "erain": {"raw": "M{:>5}"},
+    "erain": {"raw": "M{:>4}"},
     "ph2ol": {"length": 5}
 }
 
