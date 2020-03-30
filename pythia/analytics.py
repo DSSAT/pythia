@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import rasterio
 import pythia.analytic_functions
@@ -154,7 +155,10 @@ def collate_outputs(config, run):
                             harea = pythia.io.get_site_raster_value(
                                 ds, band, (float(lng), float(lat))
                             )
-                            harea_s = "{:0.2f}".format(harea)
+                            if harea is None:
+                                harea = 0
+                                logging.warning("%s, %s is giving an invalid harea, replacing with 0")
+                            harea_s = "{0.2f}".format(harea)
                             dest.write(
                                 "{},{},{},{},{}\n".format(
                                     lat, lng, harea_s, run.get("name", ""), line.strip()
