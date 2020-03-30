@@ -158,7 +158,7 @@ def collate_outputs(config, run):
                             if harea is None:
                                 harea = 0
                                 logging.warning("%s, %s is giving an invalid harea, replacing with 0")
-                            harea_s = "{0.2f}".format(harea)
+                            harea_s = "{:0.2f}".format(harea)
                             dest.write(
                                 "{},{},{},{},{}\n".format(
                                     lat, lng, harea_s, run.get("name", ""), line.strip()
