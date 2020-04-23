@@ -31,14 +31,17 @@ def peer(run, sample_size=None):
         sites = pythia.functions.xy_from_vector(run["sites"])
     data = []
     nodata = []
+    current_nodata = 0
     layers = list(rasters.keys())
     for raster in rasters.values():
         with rasterio.open(raster) as ds:
             if "int" in ds.dtypes[0]:
-                nodata.append(int(ds.nodatavals[0]))
+                current_nodata = -999
             else:
-                nodata.append(ds.nodatavals[0])
-            band = ds.read(1)
+                current_nodata = -999.
+            nodata.append(current_nodata)
+            masked_band = ds.read(1, masked=True)
+            band = masked_band.filled(current_nodata)
             data.append([get_site_raster_value(ds, band, site) for site in sites])
     peerless = list(
         filter(
@@ -113,7 +116,8 @@ def find_closest_vector_coords(f, lng, lat, a):
                 ids.extend([feature["properties"][a]] * len(feature["geometry"]["coordinates"]))
             if feature["geometry"]["type"] == "Point":
                 points.append(
-                    Point(feature["geometry"]["coordinates"][0], feature["geometry"]["coordinates"][1])
+                    Point(feature["geometry"]["coordinates"][0],
+                          feature["geometry"]["coordinates"][1])
                 )
                 ids.append(feature["properties"][a])
     mp = MultiPoint(points)
