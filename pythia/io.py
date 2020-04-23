@@ -53,6 +53,8 @@ def read_layer_by_cell(idx, data, layers, sites):
     lng, lat = sites[idx]
     cell = {"lat": lat, "lng": lng, "xcrd": lng, "ycrd": lat}
     for i, c in enumerate(data):
+        if c[idx] is None:
+            return None
         if layers[i] == "harvestArea" and c[idx] == 0:
             return None
         else:
