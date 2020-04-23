@@ -33,7 +33,6 @@ def peer(run, sample_size=None):
     else:
         sites = pythia.functions.xy_from_vector(run["sites"])
     data = []
-    nodata = []
     layers = list(rasters.keys())
     for raster in rasters.values():
         with rasterio.open(raster) as ds:
@@ -42,25 +41,22 @@ def peer(run, sample_size=None):
     peerless = list(
         filter(
             lambda x: x is not None,
-            [read_layer_by_cell(i, data, nodata, layers, sites) for i in range(len(sites))],
+            [read_layer_by_cell(i, data, layers, sites) for i in range(len(sites))],
         )
     )
     return peerless[:sample_size]
 
 
-def read_layer_by_cell(idx, data, nodata, layers, sites):
+def read_layer_by_cell(idx, data, layers, sites):
     if data is None:
         return None
     lng, lat = sites[idx]
     cell = {"lat": lat, "lng": lng, "xcrd": lng, "ycrd": lat}
     for i, c in enumerate(data):
-        if c[idx] == nodata[i]:
+        if layers[i] == "harvestArea" and c[idx] == 0:
             return None
         else:
-            if layers[i] == "harvestArea" and c[idx] == 0:
-                return None
-            else:
-                cell[layers[i]] = c[idx]
+            cell[layers[i]] = c[idx]
     return cell
 
 
