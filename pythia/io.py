@@ -1,6 +1,7 @@
 import os
 
 import fiona
+import numpy.ma as ma
 import rasterio
 from shapely.geometry import Point, MultiPoint
 from shapely.ops import nearest_points
@@ -17,6 +18,8 @@ def get_site_raster_value(dataset, band, site):
     data = []
     try:
         data = band[row, col]
+        if (data is ma.masked):
+            data = None
     except IndexError:
         data = None
     return data
@@ -31,17 +34,10 @@ def peer(run, sample_size=None):
         sites = pythia.functions.xy_from_vector(run["sites"])
     data = []
     nodata = []
-    current_nodata = 0
     layers = list(rasters.keys())
     for raster in rasters.values():
         with rasterio.open(raster) as ds:
-            if "int" in ds.dtypes[0]:
-                current_nodata = -999
-            else:
-                current_nodata = -999.
-            nodata.append(current_nodata)
-            masked_band = ds.read(1, masked=True)
-            band = masked_band.filled(current_nodata)
+            band = ds.read(1, masked=True)
             data.append([get_site_raster_value(ds, band, site) for site in sites])
     peerless = list(
         filter(
