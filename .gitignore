@@ -8,3 +8,5 @@ pythia/__pycache__/*
 work/*
 *.log
 .pytest_cache/*
+docs/source/_build
+docs/build
