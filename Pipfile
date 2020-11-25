@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fiona = "~=1.8"
+jinja2 = "~=2.10"
+numpy = "~=1.16"
+pandas = "~=0.25"
+pillow = "~=5.4"
+rasterio = "~=1.0"
+shapely = "~=1.6"
+rtree = "~=0.8"
+
+[dev-packages]
+pytest = "~=5.1"
+
+[requires]
+python_version = "3.7"
