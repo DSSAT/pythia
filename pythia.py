@@ -1,82 +1,65 @@
-import argparse
-from datetime import datetime
-import math
+import datetime
+import logging
 import os
-import numpy as np
-import pandas as pd
-import rasterio
 
-def loadRaster(raster):
-    data = {}
-    with rasterio.open(raster) as r:
-        data['nd_val'] = r.nodata
-        data['vals'] = r.read(1)
-    return data
+import pythia.config
+import pythia.dssat
+import pythia.analytics
+import pythia.io
+import pythia.peerless
+import pythia.plugin
 
-def loadSummary(d):
-    df = pd.read_csv(os.path.join(d, 'summary.csv'), index_col=False)
-    lim =  df.filter(items=['HWAM', 'PRCP', 'PDAT', 'ADAT', 'HDAT'])
-    lim.replace(-99, 0, inplace=True)
-    lim.fillna(0, inplace=True)
-    lim['adj'] = np.where((lim['ADAT'] == 0) | (lim['HDAT'] == 0), 1, 0)
-    lim.loc[lim['ADAT'] == 0, 'HDAT'] = 0
-    df = None
-    return lim
-
-def applyScale(df, scale):
-    return df*scale
-
-def applyAverage(df, col, cum):
-    return round(df[col]/cum)
-
-def applyDateAverage(df, col, cum):
-    return df[col]/(cum - df['adj'])
-
-def accumulate(acc, df):
-    if acc is None:
-        return df
-    else:
-        return acc+df
-
-def main(args):
-    scale_data = loadRaster(args.scale)
-    directories = next(os.walk(args.wd))[1]
-#    coord_list = [tuple(map(int, d.split('_'))) for d in directories]
-    scale_factors = ([scale_data['vals'][c[0]][c[1]] for c in [tuple(map(int, d.split('_'))) for d in directories]])
-    sf_cum = sum(scale_factors)
-    if args.debug:
-        print(list(zip(directories, scale_factors)))
-        print(sf_cum)
-    acc = None
-    scale_adjust = {}
-    for idx, d in enumerate(directories):
-        if args.debug:
-            print("Running {}".format(d))
-        summary = loadSummary(os.path.join(args.wd, d))
-        scaled = applyScale(summary, scale_factors[idx])
-        acc = accumulate(acc, scaled)
-    if args.debug:
-        print(acc['adj'])
-    acc['HWAM'] = (acc['HWAM'].astype(int))/1000 #hardcoded to Metric Tonnes
-    acc['PRCP'] = applyDateAverage(acc, 'PRCP', sf_cum).astype(int)
-    acc['AY'] = round(acc['HWAM']/sf_cum).astype(int)
-    acc['PDAT'] = pd.to_datetime(applyAverage(acc, 'PDAT', sf_cum).apply(math.floor).apply(str), format="%Y%j", errors='coerce')
-    acc['ADAT'] = pd.to_datetime(applyDateAverage(acc, 'ADAT', sf_cum).apply(math.floor).apply(str), format="%Y%j", errors='coerce')
-    acc['HDAT'] = pd.to_datetime(applyDateAverage(acc, 'HDAT', sf_cum).apply(math.floor).apply(str), format="%Y%j", errors='coerce')
-    acc['YEAR'] = acc.index+1984
-    acc['SCALE'] = round((acc['adj']/sf_cum)*100).astype(int)
-    acc = acc.reindex(columns=['YEAR', 'HWAM', 'AY', 'PRCP', 'PDAT', 'ADAT', 'HDAT', 'SCALE'])
-    acc.columns = ['Year', 'Production (t)', 'Average Yield (kg/ha)', 'Average Rainfall (mm)', 'Average Planting Date', 'Average Anthesis Date', 'Average Harvest Date', 'Percent Failures']
-    if args.debug or args.no_output:
-        print(acc)
-    if not args.no_output:
-        acc.to_csv(os.path.join(args.wd, 'overview.csv'), index=False)
+logging.getLogger("pythia_app")
+logging.basicConfig(level=logging.INFO, filename="pythia.log", filemode="w")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='The oracle')
-    parser.add_argument('wd', help='The working directory')
-    parser.add_argument('scale', help='The raster used to scale up the results')
-    parser.add_argument('--no-output', action='store_true')
-    parser.add_argument('--debug', action='store_true')
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config", help="JSON configuration file to run")
+    parser.add_argument("--all", action="store_true", help="Run all the steps in pythia")
+    parser.add_argument(
+        "--export-runlist",
+        action="store_true",
+        help="Export a list of all the directories to be run",
+    )
+    parser.add_argument("--setup", action="store_true", help="Setup DSSAT run structure and files")
+    parser.add_argument("--run-dssat", action="store_true", help="Run DSSAT over the run structure")
+    parser.add_argument(
+        "--analyze", action="store_true", help="Run the analysis for the DSSAT runs"
+    )
+    parser.add_argument(
+        "--clean-work-dir", action="store_true", help="Clean the work directory prior to run"
+    )
     args = parser.parse_args()
-    main(args)
+
+    if not args.config:
+        parser.print_help()
+    else:
+        config = pythia.config.load_config(args.config)
+        if args is None or not config:
+            print("Invalid configuration file")
+        else:
+            logging.info("Pythia started: %s", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            if args.clean_work_dir:
+                print("Cleaning the work directory")
+                if os.path.exists(config["workDir"]):
+                    import shutil
+
+                    shutil.rmtree(config["workDir"])
+
+            config["exportRunlist"] = args.export_runlist
+            plugins = pythia.plugin.load_plugins(config, {})
+            config = pythia.plugin.run_plugin_functions(
+                pythia.plugin.PluginHook.post_config, plugins, full_config=config
+            )
+            if args.all or args.setup:
+                print("Setting up points and directory structure")
+                pythia.peerless.execute(config, plugins)
+            if args.all or args.run_dssat:
+                print("Running DSSAT over the directory structure")
+                pythia.dssat.execute(config, plugins)
+            if args.all or args.analyze:
+                print("Running simple analytics over DSSAT directory structure")
+                pythia.analytics.execute(config, plugins)
+            logging.info("Pythia completed: %s", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

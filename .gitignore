@@ -1,0 +1,12 @@
+.DS_Store
+tags
+data/*
+pythia/__pycache__/*
+.idea/*
+.vscode/*
+*.pyc
+work/*
+*.log
+.pytest_cache/*
+docs/source/_build
+docs/build
