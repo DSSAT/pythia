@@ -49,10 +49,7 @@ def lookup_hc27(k, run, context, _):
 
 def lookup_wth(k, run, context, _):
     args = run[k].split("::")[1:]
-    if isinstance(run["sites"], list):
-        finder = pythia.io.find_closest_vector_coords
-    else:
-        finder = pythia.io.find_vector_coords
+    finder = pythia.io.find_closest_vector_coords
     if "vector" in args:
         idx = args.index("vector")
         cell_id = finder(
