@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 
@@ -39,6 +40,7 @@ if __name__ == "__main__":
         if args is None or not config:
             print("Invalid configuration file")
         else:
+            logging.info("Pythia started: %s", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             if args.clean_work_dir:
                 print("Cleaning the work directory")
                 if os.path.exists(config["workDir"]):
@@ -60,3 +62,4 @@ if __name__ == "__main__":
             if args.all or args.analyze:
                 print("Running simple analytics over DSSAT directory structure")
                 pythia.analytics.execute(config, plugins)
+            logging.info("Pythia completed: %s", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

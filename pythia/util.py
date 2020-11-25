@@ -16,7 +16,10 @@ def from_julian_date(s):
 
 
 def from_iso_date(s):
-    return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+    try:
+        return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        pass
 
 
 def get_rasters_list(iterator):
@@ -32,13 +35,13 @@ def get_rasters_list(iterator):
 
 def get_rasters_dict(iterator):
     return {
-        k: pythia.functions.extract_raster(v) for (k, v) in iterator.items() if "raster::" in str(v)
+        k: pythia.functions.extract_raster(v)
+        for (k, v) in iterator.items()
+        if "raster::" in str(v)
     }
 
 
 def translate_coords_news(lat, lng):
-    y = ""
-    x = ""
     if lat >= 0:
         y = "{:.3f}N".format(lat).replace(".", "_")
     else:
@@ -55,4 +58,3 @@ def translate_news_coords(news):
         return news.replace("_", ".")[:-1]
     else:
         return "-{}".format(news.replace("_", ".")[:-1])
-

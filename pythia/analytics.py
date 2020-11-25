@@ -1,5 +1,7 @@
 import csv
+import logging
 import os
+import shutil
 import rasterio
 import pythia.analytic_functions
 import pythia.io
@@ -19,12 +21,24 @@ def _generated_run_files(run_path, target_file):
 
 def extract_ll(path):
     ll = path.split(os.path.sep)[-2:]
-    return tuple([pythia.util.translate_news_coords(l) for l in ll])
+    return tuple([pythia.util.translate_news_coords(coords) for coords in ll])
 
 
 # Always by default keep the per_pixel_per_management file, but create a place
 # for the single output or analytics, should we have a "final outputs"
 # directory.
+def final_outputs(config, outputs):
+    analytics_config = config.get("analytics_setup", {})
+    out_files = []
+    out_dir = os.path.join(config.get("workDir", "."))
+    file_prefix = "{}_".format(analytics_config.get("per_pixel_prefix", "pp"))
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    for current_file in outputs:
+         bn = basename(current_file)
+         out_file = os.path.join(out_dir, bn[bn.find(file_prefix):])
+         shutil.copyfile(current_file, out_file)
+
 def filter_columns(config, outputs):
     analytics_config = config.get("analytics_setup", {})
     columns = analytics_config.get("columns", [])
@@ -126,7 +140,7 @@ def collate_outputs(config, run):
         analytics_config.get("per_pixel_prefix", "pp"), run["name"]
     )
     work_dir = get_run_basedir(config, run)
-    out_file = os.path.join(work_dir, per_pixel_file_name)
+    out_file = os.path.join(work_dir, "scratch", per_pixel_file_name)
     harea_info = run.get("harvestArea", None)
     collected_first_line = False
     for current_dir in _generated_run_files(work_dir, "summary.csv"):
@@ -154,6 +168,9 @@ def collate_outputs(config, run):
                             harea = pythia.io.get_site_raster_value(
                                 ds, band, (float(lng), float(lat))
                             )
+                            if harea is None:
+                                harea = 0
+                                logging.warning("%s, %s is giving an invalid harea, replacing with 0")
                             harea_s = "{:0.2f}".format(harea)
                             dest.write(
                                 "{},{},{},{},{}\n".format(
@@ -186,3 +203,5 @@ def execute(config, plugins):
         filtered = calculated
     if analytics_config.get("singleOutput", False):
         combine_outputs(config, filtered)
+    else:
+        final_outputs(config, filtered)
