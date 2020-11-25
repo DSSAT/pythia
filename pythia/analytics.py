@@ -35,7 +35,7 @@ def final_outputs(config, outputs):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     for current_file in outputs:
-         bn = basename(current_file)
+         bn = os.path.basename(current_file)
          out_file = os.path.join(out_dir, bn[bn.find(file_prefix):])
          shutil.copyfile(current_file, out_file)
 
@@ -140,7 +140,10 @@ def collate_outputs(config, run):
         analytics_config.get("per_pixel_prefix", "pp"), run["name"]
     )
     work_dir = get_run_basedir(config, run)
-    out_file = os.path.join(work_dir, "scratch", per_pixel_file_name)
+    out_dir = os.path.join(config.get("workDir", "."), "scratch")
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    out_file = os.path.join(out_dir, per_pixel_file_name)
     harea_info = run.get("harvestArea", None)
     collected_first_line = False
     for current_dir in _generated_run_files(work_dir, "summary.csv"):
