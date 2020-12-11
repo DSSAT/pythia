@@ -12,6 +12,9 @@ in pkgs.mkShell rec {
 
     pkgs.libspatialite
     pkgs.libspatialindex
+
+    pkgs.black
+    pp.bandit
   ];
 
   preShellHook = ''
