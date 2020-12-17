@@ -9,12 +9,9 @@ import pythia.io
 import pythia.peerless
 import pythia.plugin
 
-logging.getLogger("pythia_app")
-logging.basicConfig(level=logging.INFO, filename="pythia.log", filemode="w")
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("config", help="JSON configuration file to run")
     parser.add_argument("--all", action="store_true", help="Run all the steps in pythia")
@@ -36,6 +33,9 @@ if __name__ == "__main__":
     if not args.config:
         parser.print_help()
     else:
+        now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        logging.getLogger("pythia_app")
+        logging.basicConfig(level=logging.INFO, filename="pythia-{}.log".format(now), filemode="w")
         config = pythia.config.load_config(args.config)
         if args is None or not config:
             print("Invalid configuration file")
