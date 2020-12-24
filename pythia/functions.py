@@ -129,16 +129,16 @@ def assign_by_raster_value(k, run, context, _):
     if "raster" in init_args:
         args = init_args[init_args.index("raster")+2:]
     else:
-        logging.error("Need to specify a raster for assign_by_value")
+        logging.error("Need to specify a raster for %s:assign_by_value", k)
         return None
     raster_val = [int(i) for i in args[0::2]]
     assignment = args[1::2]
     if len(raster_val) != len(assignment):
-        logging.error("The values and assignments don't pair up in assign_by_raster_value")
+        logging.error("The values and assignments don't pair up in %s:assign_by_raster_value", k)
         return None
     if context[k] in raster_val:
         rv_idx = raster_val.index(context[k])
         return {k: assignment[rv_idx]}
     else:
-        logging.error("No assignment for value %d", context[k])
+        logging.error("No assignment for value %d in %s:assign_by_value", context[k], k)
         return None
