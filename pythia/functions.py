@@ -140,4 +140,5 @@ def assign_by_raster_value(k, run, context, _):
         rv_idx = raster_val.index(context[k])
         return {k: assignment[rv_idx]}
     else:
+        logging.error("No assignment for value %d", context[k])
         return None
