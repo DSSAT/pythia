@@ -9,6 +9,7 @@ in pkgs.mkShell rec {
     pkgs.python37
     pkgs.pipenv
     pp.venvShellHook 
+    pp.poetry
 
     pkgs.libspatialite
     pkgs.libspatialindex
