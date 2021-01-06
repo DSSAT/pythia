@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import logging
 import os
@@ -10,8 +11,7 @@ import pythia.peerless
 import pythia.plugin
 
 
-if __name__ == "__main__":
-    import argparse
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("config", help="JSON configuration file to run")
     parser.add_argument("--all", action="store_true", help="Run all the steps in pythia")
