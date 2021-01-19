@@ -1,6 +1,8 @@
 import datetime
 import logging
+import os
 
+from pythia.cache_manager import cache
 import pythia.io
 import pythia.soil_handler
 import pythia.template
@@ -71,27 +73,36 @@ def generate_ic_layers(k, run, context, _):
     return {k: [dict(zip(layer_labels, cl)) for cl in calculated_layers]}
 
 
-def lookup_ghr(k, run, context, config):
-    import os
+def build_ghr_cache(config):
     import sqlite3
+    with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
+        cache["ghr_profiles"] = {}
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM profile_map")
+        for row in cursor.fetchall():
+            if row["profile"] == "":
+                profile = None
+            else:
+                profile = row["profile"]
+            cache["ghr_profiles"][row["id"]] = profile
 
+    pass
+
+def lookup_ghr(k, run, context, config):
     args = run[k].split("::")[1:]
     if "raster" in args:
         logging.debug("lookup_ghr - context[%s] => %s", k, context[k])
-        with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
-            c = conn.cursor()
-            tif_profile_id = (int(str(context[k])),)
-            c.execute("SELECT profile from profile_map WHERE id=?", tif_profile_id)
-            id_soil = c.fetchone()
-            if id_soil and id_soil[0].strip() != "":
-                id_soil = id_soil[0]
-                sol_file = "{}.SOL".format(id_soil[:2].upper())
-                return {k: id_soil, "soilFiles": [os.path.join(config["ghr_root"], sol_file)]}
-            else:
-                logging.error("Soil NOT found")
-                logging.error(context)
-                return None
-
+        if not "ghr_profiles" in cache:
+            build_ghr_cache(config)
+        tif_profile_id = int(str(context[k]))
+        id_soil = cache["ghr_profiles"][tif_profile_id] 
+        if id_soil and id_soil.strip() != "":
+            sol_file = "{}.SOL".format(id_soil[:2].upper())
+            return {k: id_soil, "soilFiles": [os.path.join(config["ghr_root"], sol_file)]}
+        else:
+            logging.error("Soil NOT found for id: %s at (%f,%f)", tif_profile_id, context["lng"], context["lat"])
+            return None
 
 def split_fert_dap_percent(k, run, context, _):
     args = run[k].split("::")[1:]
