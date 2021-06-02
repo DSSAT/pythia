@@ -10,3 +10,5 @@ work/*
 .pytest_cache/*
 docs/source/_build
 docs/build
+.venv
+dist

@@ -1,6 +1,8 @@
 import datetime
 import logging
+import os
 
+from pythia.cache_manager import cache
 import pythia.io
 import pythia.soil_handler
 import pythia.template
@@ -71,32 +73,45 @@ def generate_ic_layers(k, run, context, _):
     return {k: [dict(zip(layer_labels, cl)) for cl in calculated_layers]}
 
 
-def lookup_ghr(k, run, context, config):
-    import os
+def build_ghr_cache(config):
     import sqlite3
+    with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
+        cache["ghr_profiles"] = {}
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM profile_map")
+        for row in cursor.fetchall():
+            if row["profile"] == "":
+                profile = None
+            else:
+                profile = row["profile"]
+            cache["ghr_profiles"][row["id"]] = profile
 
+    pass
+
+def lookup_ghr(k, run, context, config):
     args = run[k].split("::")[1:]
     if "raster" in args:
         logging.debug("lookup_ghr - context[%s] => %s", k, context[k])
-        with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
-            c = conn.cursor()
-            tif_profile_id = (int(str(context[k])),)
-            c.execute("SELECT profile from profile_map WHERE id=?", tif_profile_id)
-            id_soil = c.fetchone()
-            if id_soil and id_soil[0].strip() != "":
-                id_soil = id_soil[0]
-                sol_file = "{}.SOL".format(id_soil[:2].upper())
-                return {k: id_soil, "soilFiles": [os.path.join(config["ghr_root"], sol_file)]}
-            else:
-                logging.error("Soil NOT found")
-                logging.error(context)
-                return None
-
+        if not "ghr_profiles" in cache:
+            build_ghr_cache(config)
+        tif_profile_id = int(str(context[k]))
+        if not tif_profile_id in cache["ghr_profiles"]:
+            logging.error("Invalid soil ID (%d) at (%f,%f)", tif_profile_id, context["lng"], context["lat"])
+            return None
+        id_soil = cache["ghr_profiles"][tif_profile_id] 
+        if id_soil and id_soil.strip() != "":
+            sol_file = "{}.SOL".format(id_soil[:2].upper())
+            return {k: id_soil, "soilFiles": [os.path.join(config["ghr_root"], sol_file)]}
+        else:
+            logging.error("Soil NOT found for id: %s at (%f,%f)", tif_profile_id, context["lng"], context["lat"])
+            return None
 
 def split_fert_dap_percent(k, run, context, _):
     args = run[k].split("::")[1:]
     if args[0].startswith("$"):
-        total = run[args[0][1:]]
+        search_context = args[0][1:]
+        total = float(context[search_context])
     else:
         total = float(args[0])
     # splits = int(args[1])
@@ -129,15 +144,16 @@ def assign_by_raster_value(k, run, context, _):
     if "raster" in init_args:
         args = init_args[init_args.index("raster")+2:]
     else:
-        logging.error("Need to specify a raster for assign_by_value")
+        logging.error("Need to specify a raster for %s:assign_by_value", k)
         return None
     raster_val = [int(i) for i in args[0::2]]
     assignment = args[1::2]
     if len(raster_val) != len(assignment):
-        logging.error("The values and assignments don't pair up in assign_by_raster_value")
+        logging.error("The values and assignments don't pair up in %s:assign_by_raster_value", k)
         return None
     if context[k] in raster_val:
         rv_idx = raster_val.index(context[k])
         return {k: assignment[rv_idx]}
     else:
+        logging.error("No assignment for value %d in %s:assign_by_value", context[k], k)
         return None

@@ -153,33 +153,39 @@ def collate_outputs(config, run):
         else:
             mode = "w"
         with open(os.path.join(current_dir, "summary.csv")) as source, open(out_file, mode) as dest:
-            # TODO Fix later, this is hacky with little checks in place
+            additional_headers = "LATITUDE,LONGITUDE,RUN_NAME"
+            ds = None
+            band = None
             if harea_info:
+                additional_headers = f'{additional_headers},HARVEST_AREA'
                 harea_tiff = harea_info.split("::")[1]
-                with rasterio.open(harea_tiff) as ds:
-                    band = ds.read(1)
-                    for i, line in enumerate(source):
-                        if i == 0:
-                            if not collected_first_line:
-                                dest.write(
-                                    "LATITUDE,LONGITUDE,HARVEST_AREA,RUN_NAME,{}\n".format(
-                                        line.strip()
-                                    )
-                                )
-                                collected_first_line = True
-                        else:
-                            harea = pythia.io.get_site_raster_value(
-                                ds, band, (float(lng), float(lat))
+                ds = rasterio.open(harea_tiff)
+                band = ds.read(1)
+            for i, line in enumerate(source):
+                if i == 0:
+                    if not collected_first_line:
+                        dest.write(
+                            "{},{}\n".format(
+                                additional_headers,
+                                line.strip()
                             )
-                            if harea is None:
-                                harea = 0
-                                logging.warning("%s, %s is giving an invalid harea, replacing with 0")
-                            harea_s = "{:0.2f}".format(harea)
-                            dest.write(
-                                "{},{},{},{},{}\n".format(
-                                    lat, lng, harea_s, run.get("name", ""), line.strip()
-                                )
-                            )
+                        )
+                        collected_first_line = True
+                else:
+                    to_write = (lat, lng, run.get("name", ""))
+                    if ds is not None and not ds.closed:
+                        harea = pythia.io.get_site_raster_value(
+                            ds, band, (float(lng), float(lat))
+                        )
+                        if harea is None:
+                            harea = 0
+                            logging.warning("%s, %s is giving an invalid harea, replacing with 0")
+                        harea_s = "{:0.2f}".format(harea)
+                        to_write = to_write + (harea_s,)
+                    to_write = to_write + (line.strip()+"\n",)
+                    dest.write(",".join(to_write))
+            if ds is not None:
+                ds.close()
     return out_file
 
 
