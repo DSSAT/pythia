@@ -197,5 +197,27 @@ def date_from_doy_raster(k, run, context, _):
         k: pythia.util.to_iso_date(
             pythia.util.from_julian_date(f'{run["startYear"]}{context[k]}')
         )
-
     }
+
+
+def date_offset(k, run, context, _):
+    args = run[k].split("::")[1:]
+    offset_value = args[-1]
+    try:
+        offset_value = int(offset_value)
+    except ValueError:
+        logging.error("date_offset: %s is not an integer", offset_value)
+        return None
+    if args[0].startswith("$"):
+        search_context = args[0][1:]
+        if search_context not in context:
+            logging.error("date_offset: %s is not in the current context.", args[0])
+            return None
+        context_date = context[search_context]
+        cxt_date = pythia.util.from_iso_date(context_date)
+        td = datetime.timedelta(days=offset_value)
+        new_date = cxt_date + td
+        return {k: pythia.util.to_iso_date(new_date)}
+    else:
+        logging.error("date_offset only works with references variables.")
+        return None
