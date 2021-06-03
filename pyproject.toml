@@ -16,6 +16,8 @@ rtree = "^0.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.1"
+black = "^21.5b2"
+flake8 = "^3.9.2"
 
 [tool.poetry.scripts]
 pythia = "pythia.cli:main"
