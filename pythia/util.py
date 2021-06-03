@@ -9,6 +9,7 @@ def to_julian_date(d):
         return d.strftime("%y%j")
     except ValueError:
         logging.error("Unable to convert %s to a julian date", d)
+        return None
 
 
 def to_iso_date(d):
@@ -23,7 +24,11 @@ def from_julian_date(s):
     try:
         return datetime.datetime.strptime(s, "%y%j").date()
     except ValueError:
-        logging.error("%s is not a valid julian date", s)
+        pass
+    try:
+        return datetime.datetime.strptime(s, "%Y%j").date()
+    except ValueError:
+        logging.error('"%s" is an invalid julian date format.', s)
         return None
 
 
@@ -31,7 +36,7 @@ def from_iso_date(s):
     try:
         return datetime.datetime.strptime(s, "%Y-%m-%d").date()
     except ValueError:
-        logging.error("%s is not a proper ISO date.", s)
+        logging.error('"%s" is an invalid ISO date format.', s)
         return None
 
 
