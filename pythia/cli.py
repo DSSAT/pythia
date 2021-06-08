@@ -28,6 +28,8 @@ def main():
     parser.add_argument(
         "--clean-work-dir", action="store_true", help="Clean the work directory prior to run"
     )
+    parser.add_argument(
+            "--logfile-prefix", default="pythia", help="Prefix the log file with this string. <prefix|pythia>-YYYYmmdd-hhMMSS.log")
     args = parser.parse_args()
 
     if not args.config:
@@ -35,7 +37,7 @@ def main():
     else:
         now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         logging.getLogger("pythia_app")
-        logging.basicConfig(level=logging.INFO, filename="pythia-{}.log".format(now), filemode="w")
+        logging.basicConfig(level=logging.INFO, filename="{}-{}.log".format(args.logfile_prefix, now), filemode="w")
         config = pythia.config.load_config(args.config)
         if args is None or not config:
             print("Invalid configuration file")
