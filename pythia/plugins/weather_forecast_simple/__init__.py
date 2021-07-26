@@ -18,15 +18,16 @@ import pythia.util
 
 def initialize(config, plugins, full_config):
     logging.info("[SIMPLE WEATHER FORECAST PLUGIN] Initializing plugin")
-    config["weatherDir"] = full_config["weatherDir"]
-    config["start_date"] = pythia.util.to_julian_date(
-        pythia.util.from_iso_date(config["start_date"])
+    cfg = config["params"]
+    cfg["weatherDir"] = full_config["weatherDir"]
+    cfg["start_date"] = pythia.util.to_julian_date(
+        pythia.util.from_iso_date(cfg["start_date"])
     )
-    config["end_date"] = pythia.util.to_julian_date(pythia.util.from_iso_date(config["end_date"]))
-    config["start_on"] = config["start_date"][2:5]
-    config["end_on"] = config["end_date"][2:5]
+    cfg["end_date"] = pythia.util.to_julian_date(pythia.util.from_iso_date(cfg["end_date"]))
+    cfg["start_on"] = cfg["start_date"][2:5]
+    cfg["end_on"] = cfg["end_date"][2:5]
     return register_plugin_function(
-        PluginHook.post_build_context, construct_pixel_forecast, config, plugins
+        PluginHook.post_build_context, construct_pixel_forecast, cfg, plugins
     )
 
 

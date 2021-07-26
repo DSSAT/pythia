@@ -20,6 +20,7 @@ Configuration:
             "values" : ["M0.25", "M1.0", "M1.25"]
         }
     },
+    "no_rename": true, (optional, defaults to false)
     "order": 1
 ]
 """
@@ -37,11 +38,13 @@ Post application:
 
 def initialize(config, plugins, full_config):
     logging.info("[Sensitivity Plugin] Initializing plugin")
-    plugins = register_plugin_function(PluginHook.post_config, generate_sensitivity_runs, config,
+    cfg = config["params"]
+    cfg["no_rename"] = config.get("no_rename", False) 
+    plugins = register_plugin_function(PluginHook.post_config, generate_sensitivity_runs, cfg,
                                        plugins)
-    plugins = register_plugin_function(PluginHook.post_build_context, post_build_context_apply_factors, config, plugins)
+    plugins = register_plugin_function(PluginHook.post_build_context, post_build_context_apply_factors, cfg, plugins)
     plugins = register_plugin_function(PluginHook.post_build_context,
-                                       post_build_context_apply_static_factors, config, plugins)
+                                       post_build_context_apply_static_factors, cfg, plugins)
     return plugins
 
 
@@ -71,6 +74,8 @@ def generate_sensitivity_runs(plugin_config={}, full_config={}):
             "_sens_post_context_static": {}}
     # First we organize them
     for k in plugin_config.keys():
+        if k == "no_rename":
+            continue
         hook = plugin_config[k].get("hook", "post_config").casefold()
         static = plugin_config[k].get("static", False)
         context_string = None
@@ -94,9 +99,10 @@ def generate_sensitivity_runs(plugin_config={}, full_config={}):
         current_name = run["name"]
         current_workDir = run["workDir"]
         for factor in factors:
-            f = generate_factorial_name(factor)
-            run["name"] = current_name + "__" + f
-            run["workDir"] = current_workDir + "__" + f
+            if not plugin_config.get("no_rename", False):
+            	f = generate_factorial_name(factor)
+            	run["name"] = current_name + "__" + f
+            	run["workDir"] = current_workDir + "__" + f
             out_runs.append({**run, **{"_sens": factor}})
     out_runs = [apply_factors("_sens_pre_context", run) for run in out_runs]
     out_runs = [apply_factors("_sens_pre_context_static", run) for run in out_runs]
