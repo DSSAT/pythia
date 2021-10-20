@@ -7,8 +7,11 @@ from multiprocessing.pool import Pool
 
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
-    command_string = "cd {} && {} A {}".format(
-        details["dir"], config["dssat"]["executable"], details["file"]
+    run_mode = "A"
+    if "run_mode" in config["dssat"]:
+        run_mode = config["dssat"]["run_mode"].upper()
+    command_string = "cd {} && {} {} {}".format(
+        details["dir"], config["dssat"]["executable"], run_mode, details["file"]
     )
     # print(".", end="", flush=True)
     dssat = subprocess.Popen(

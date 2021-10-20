@@ -1,11 +1,11 @@
 #+TITLE: Pythia Project Notes
 
 * Task List
-** TODO Implement ~run_mode~ in the ~dssat~ configuration.
+** DONE Implement ~run_mode~ in the ~dssat~ configuration.
 - Default is ~A~
 - Used to support ~forecast mode~
-** TODO Add ~FODATE~ to template
+** DONE Add ~FODATE~ to template
 - Default is ~-99~
 ** TODO Add ~append_column~ in the ~analytics_setup~ configuration
 - Will add a column ~x~ to the end of each line of output.
-** TODO Validate ~vector::~ function works to feed any fields.
+** DONE Validate ~vector::~ function works to feed any fields.
