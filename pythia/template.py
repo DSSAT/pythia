@@ -26,7 +26,7 @@ _t_formats = {
     "irrig": {"length": 5},
     "erain": {"raw": "M{:>4}"},
     "ph2ol": {"length": 5},
-    "fodate": {"length": 7},
+    "fodate": {"length": 7}
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "fodate"]
@@ -66,7 +66,8 @@ def auto_format_dict(d):
     if isinstance(d, str):
         return d
     clean = {}
-    for k,v in _t_formats:
+    for k in _t_formats:
+        v = _t_formats[k]
         if "default" in v:
             clean[k] = wrap_format(k, v["default"])
         else:
