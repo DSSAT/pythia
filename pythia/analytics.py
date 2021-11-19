@@ -221,8 +221,8 @@ def collate_outputs(config, run):
                             logging.warning(
                                 "%s, %s is giving an invalid population, replacing with 0"
                             )
-                            pop_s = "{:0.2f}".format(pop)
-                            to_write = to_write + (pop_s,)
+                        pop_s = "{:0.2f}".format(pop)
+                        to_write = to_write + (pop_s,)
                     to_write = to_write + (line.strip() + "\n",)
                     dest.write(",".join(to_write))
             if ds_harea is not None:
