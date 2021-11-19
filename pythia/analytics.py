@@ -229,7 +229,7 @@ def collate_outputs(config, run):
                 ds_harea.close()
             if ds_pop is not None:
                 ds_pop.close()
-    return (run, out_file)
+    return out_file
 
 
 def execute(config, plugins):
