@@ -164,7 +164,7 @@ def split_fert_dap_percent(k, run, context, _):
 def assign_by_raster_value(k, run, context, _):
     init_args = run[k].split("::")[1:]
     if "raster" in init_args:
-        args = init_args[init_args.index("raster") + 2:]
+        args = init_args[init_args.index("raster") + 2 :]
     else:
         logging.error("Need to specify a raster for %s:assign_by_value", k)
         return None

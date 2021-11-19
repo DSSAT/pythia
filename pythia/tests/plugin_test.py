@@ -1,4 +1,9 @@
-from pythia.plugin import PluginHook, register_plugin_function, load_plugins, run_plugin_functions
+from pythia.plugin import (
+    PluginHook,
+    register_plugin_function,
+    load_plugins,
+    run_plugin_functions,
+)
 
 
 def test_register_with_invalid_hook():
@@ -9,13 +14,17 @@ def test_register_with_invalid_hook():
 
 def test_register_with_invalid_fun():
     plugins = {}
-    plugins1 = register_plugin_function(PluginHook.analyze_file, "not a function", "", plugins)
+    plugins1 = register_plugin_function(
+        PluginHook.analyze_file, "not a function", "", plugins
+    )
     assert plugins1 == {}
 
 
 def test_register_with_invalid_config():
     plugins = {}
-    plugins1 = register_plugin_function(PluginHook.post_analysis, sample_function, "", plugins)
+    plugins1 = register_plugin_function(
+        PluginHook.post_analysis, sample_function, "", plugins
+    )
     assert plugins1 == {}
 
 
@@ -23,19 +32,27 @@ def test_register_twice():
     plugins = {}
     plugins1 = {}
     plugins2 = {}
-    plugins1 = register_plugin_function(PluginHook.analyze_file, sample_function, {}, plugins)
+    plugins1 = register_plugin_function(
+        PluginHook.analyze_file, sample_function, {}, plugins
+    )
     plugins2 = register_plugin_function(
         PluginHook.analyze_file, sample_function, {"a": 1}, plugins1
     )
-    assert plugins1 == {PluginHook.analyze_file: [{"fun": sample_function, "config": {}}]}
+    assert plugins1 == {
+        PluginHook.analyze_file: [{"fun": sample_function, "config": {}}]
+    }
     assert plugins1 == plugins2
 
 
 def test_register_properly():
     plugins = {}
     plugins1 = {}
-    plugins1 = register_plugin_function(PluginHook.post_build_context, sample_function, {}, plugins)
-    assert plugins1 == {PluginHook.post_build_context: [{"fun": sample_function, "config": {}}]}
+    plugins1 = register_plugin_function(
+        PluginHook.post_build_context, sample_function, {}, plugins
+    )
+    assert plugins1 == {
+        PluginHook.post_build_context: [{"fun": sample_function, "config": {}}]
+    }
 
 
 def sample_function(config, context):
@@ -53,7 +70,9 @@ def test_load_plugin():
     assert plugins1[PluginHook.post_config] == [
         {"fun": pythia.plugins.test_plugin.sample_function, "config": {}}
     ]
-    assert plugins1 != {PluginHook.post_config: [{"fun": sample_function, "config": {}}]}
+    assert plugins1 != {
+        PluginHook.post_config: [{"fun": sample_function, "config": {}}]
+    }
 
 
 def test_plugin_manual_execution():
@@ -72,7 +91,9 @@ def test_plugin_auto_execution():
     plugins1 = {}
     plugins1 = load_plugins(config, plugins)
     context = {"context_value": 7}
-    context1 = run_plugin_functions(PluginHook.post_build_context, plugins1, context=context)
+    context1 = run_plugin_functions(
+        PluginHook.post_build_context, plugins1, context=context
+    )
     context2 = run_plugin_functions(PluginHook.post_build_context, plugins1)
     assert context1 != context
     assert context1["context_value"] == 8
@@ -84,8 +105,12 @@ def test_no_plugin_does_not_change_context():
     plugins = {}
     plugins1 = load_plugins(config, plugins)
     context = {"hello": "there"}
-    context1 = run_plugin_functions(PluginHook.post_build_context, plugins, context=context)
+    context1 = run_plugin_functions(
+        PluginHook.post_build_context, plugins, context=context
+    )
     assert context == context1
-    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1, context=context)
+    context2 = run_plugin_functions(
+        PluginHook.post_build_context, plugins1, context=context
+    )
     assert context1 != context2
-    assert(context2 == {**context, **{"context_value": 3}})
+    assert context2 == {**context, **{"context_value": 3}}

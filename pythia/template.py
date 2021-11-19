@@ -26,7 +26,7 @@ _t_formats = {
     "irrig": {"length": 5},
     "erain": {"raw": "M{:>4}"},
     "ph2ol": {"length": 5},
-    "fodate": {"length": 7}
+    "fodate": {"length": 7},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "fodate"]
@@ -37,6 +37,7 @@ def init_engine(template_dir):
     return Environment(
         loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
     )
+
 
 def wrap_format(k, v):
     fmt = ""
@@ -62,6 +63,7 @@ def wrap_format(k, v):
         fmt = "{}"
     return fmt.format(v)
 
+
 def auto_format_dict(d):
     if isinstance(d, str):
         return d
@@ -71,7 +73,7 @@ def auto_format_dict(d):
         if "default" in v:
             clean[k] = wrap_format(k, v["default"])
         else:
-            clean[k] = wrap_format(k,-99)
+            clean[k] = wrap_format(k, -99)
     for k, v in d.items():
         if k in _t_date_fields and "::" not in v:
             clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))

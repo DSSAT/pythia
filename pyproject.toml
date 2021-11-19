@@ -18,6 +18,12 @@ rtree = "^0.8"
 pytest = "^5.1"
 black = "^21.5b2"
 flake8 = "^3.9.2"
+neovim = "^0.3.1"
+python-lsp-server = {extras = ["all"], version = "^1.2.4"}
+pyls-isort = "^0.2.2"
+python-lsp-black = "^1.0.0"
+pylsp-rope = "^0.1.7"
+pyls-flake8 = "^0.4.0"
 
 [tool.poetry.scripts]
 pythia = "pythia.cli:main"

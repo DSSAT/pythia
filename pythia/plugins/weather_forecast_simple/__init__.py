@@ -23,7 +23,9 @@ def initialize(config, plugins, full_config):
     cfg["start_date"] = pythia.util.to_julian_date(
         pythia.util.from_iso_date(cfg["start_date"])
     )
-    cfg["end_date"] = pythia.util.to_julian_date(pythia.util.from_iso_date(cfg["end_date"]))
+    cfg["end_date"] = pythia.util.to_julian_date(
+        pythia.util.from_iso_date(cfg["end_date"])
+    )
     cfg["start_on"] = cfg["start_date"][2:5]
     cfg["end_on"] = cfg["end_date"][2:5]
     return register_plugin_function(
@@ -33,14 +35,16 @@ def initialize(config, plugins, full_config):
 
 def construct_pixel_forecast(config={}, context={}):
     """NOTE: This function is NOT side-effect free. It does I/O to create a new file in the
-       context["contextWorkDir"]. But this side-effect also is intentional to interrupt the
-       creation of the symlinks further along the process."""
+    context["contextWorkDir"]. But this side-effect also is intentional to interrupt the
+    creation of the symlinks further along the process."""
 
     """TODO: Fix the wrap around case for leap years"""
 
     logging.debug("[SIMPLE WEATHER FORECAST PLUGIN] Running construct_pixel_forecast()")
     source_weather = os.path.join(config["weatherDir"], context["wthFile"])
-    dest_weather = os.path.join(context["contextWorkDir"], "{}.WTH".format(config["wsta"]))
+    dest_weather = os.path.join(
+        context["contextWorkDir"], "{}.WTH".format(config["wsta"])
+    )
     target_lines = []
     with open(source_weather) as source:
         scraping_lines = False

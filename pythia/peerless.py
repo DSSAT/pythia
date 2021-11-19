@@ -52,7 +52,9 @@ def symlink_wth_soil(output_dir, config, context):
     for soil in context["soilFiles"]:
         soil_file = os.path.join(output_dir, os.path.basename(soil))
         if not os.path.exists(soil_file):
-            os.symlink(os.path.abspath(soil), os.path.join(output_dir, os.path.basename(soil)))
+            os.symlink(
+                os.path.abspath(soil), os.path.join(output_dir, os.path.basename(soil))
+            )
 
 
 def compose_peerless(context, config, env):
@@ -85,7 +87,9 @@ def execute(config, plugins):
                 # Post context hook
                 logging.debug("[PEERLESS] Running post_build_context plugins")
                 context = pythia.plugin.run_plugin_functions(
-                    pythia.plugin.PluginHook.post_build_context, plugins, context=context
+                    pythia.plugin.PluginHook.post_build_context,
+                    plugins,
+                    context=context,
                 )
                 runlist.append(os.path.abspath(compose_peerless(context, config, env)))
             else:

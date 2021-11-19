@@ -37,7 +37,8 @@
         "ic_layers": "generate_ic_layers::$id_soil",
         "ramt": 0,
         "fen_tot": 100.0,
-        "fertilizers": "split_fert_dap_percent::$fe"
+        "fertilizers": "split_fert_dap_percent::$fe",
+        "population": "raster::data/rasters/population.tif"
     },
     "dssat": {
         "executable": "/usr/local/dssat47/dscsm047"
@@ -53,6 +54,7 @@
             "LATITUDE",
             "LONGITUDE",
             "HARVEST_AREA",
+            "POPULATION",
             "RUN_NAME",
             "CR",
             "PDAT",
