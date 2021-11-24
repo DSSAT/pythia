@@ -1,4 +1,4 @@
-def generate_funs(config, run):
+def generate_funs(config):
     funcs = []
     for key, funs in config.items():
         fun = {}

@@ -81,9 +81,8 @@ def calculate_columns(config, outputs):
     out_dir = os.path.join(config.get("workDir", "."), "scratch")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    for current in outputs:
-        run, current_file = current
-        funs = pythia.analytic_functions.generate_funs(calculations, run)
+    for current_file in outputs:
+        funs = pythia.analytic_functions.generate_funs(calculations)
         arg_columns = []
         for fun in funs:
             for a in fun["args"]:
