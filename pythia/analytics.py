@@ -81,9 +81,8 @@ def calculate_columns(config, outputs):
     out_dir = os.path.join(config.get("workDir", "."), "scratch")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    for current in outputs:
-        run, current_file = current
-        funs = pythia.analytic_functions.generate_funs(calculations, run)
+    for current_file in outputs:
+        funs = pythia.analytic_functions.generate_funs(calculations)
         arg_columns = []
         for fun in funs:
             for a in fun["args"]:
@@ -134,7 +133,7 @@ def calculate_columns(config, outputs):
     return out_files
 
 
-def combine_outputs(outputs, config, run):
+def combine_outputs(outputs, config):
     analytics_config = config.get("analytics_setup", {})
     combined_file_name = "{}.csv".format(analytics_config.get("per_pixel_prefix", "pp"))
     out_dir = config.get("workDir", ".")
@@ -221,15 +220,15 @@ def collate_outputs(config, run):
                             logging.warning(
                                 "%s, %s is giving an invalid population, replacing with 0"
                             )
-                            pop_s = "{:0.2f}".format(pop)
-                            to_write = to_write + (pop_s,)
+                        pop_s = "{:0.2f}".format(pop)
+                        to_write = to_write + (pop_s,)
                     to_write = to_write + (line.strip() + "\n",)
                     dest.write(",".join(to_write))
             if ds_harea is not None:
                 ds_harea.close()
             if ds_pop is not None:
                 ds_pop.close()
-    return (run, out_file)
+    return out_file
 
 
 def execute(config, plugins):
