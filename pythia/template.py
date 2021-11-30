@@ -27,9 +27,13 @@ _t_formats = {
     "erain": {"raw": "M{:>4}"},
     "ph2ol": {"length": 5},
     "fodate": {"length": 7},
+    "pdate": {"length": 5},
+    "pfrst": {"length": 5},
+    "plast": {"length": 5},
+    "hdate": {"length": 5}
 }
 
-_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "fodate"]
+_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "fodate", "hdate"]
 _t_date_fields_4 = ["fodate"]
 
 
