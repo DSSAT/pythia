@@ -133,7 +133,11 @@ def calculate_columns(config, outputs):
     return out_files
 
 
+<<<<<<< HEAD
 def combine_outputs(outputs, config):
+=======
+def combine_outputs(config, outputs):
+>>>>>>> frostbytten/issue-36
     analytics_config = config.get("analytics_setup", {})
     combined_file_name = "{}.csv".format(analytics_config.get("per_pixel_prefix", "pp"))
     out_dir = config.get("workDir", ".")
