@@ -12,6 +12,14 @@ def to_julian_date(d):
         return None
 
 
+def to_julian_date_4(d):
+    try:
+        return d.strftime("%Y%j")
+    except ValueError:
+        logging.error("Unable to convert %s to a julian date", d)
+        return None
+
+
 def to_iso_date(d):
     try:
         return d.strftime("%Y-%m-%d")

@@ -7,8 +7,11 @@ from multiprocessing.pool import Pool
 
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
-    command_string = "cd {} && {} A {}".format(
-        details["dir"], config["dssat"]["executable"], details["file"]
+    run_mode = "A"
+    if "run_mode" in config["dssat"]:
+        run_mode = config["dssat"]["run_mode"].upper()
+    command_string = "cd {} && {} {} {}".format(
+        details["dir"], config["dssat"]["executable"], run_mode, details["file"]
     )
     # print(".", end="", flush=True)
     dssat = subprocess.Popen(
@@ -22,9 +25,33 @@ def _run_dssat(details, config):
 def _generate_run_list(config):
     runlist = []
     for root, _, files in os.walk(config.get("workDir", "."), topdown=False):
+        batch_mode = config["dssat"].get("run_mode", "A") in {
+            "B",
+            "E",
+            "F",
+            "L",
+            "N",
+            "Q",
+            "S",
+            "T",
+            "Y",
+        }
+        target = None
+        if batch_mode:
+            target = config["dssat"].get("batch_file", None)
+        else:
+            target = config["dssat"].get("filex", None)
         for name in files:
-            if name.upper().endswith("X"):
-                runlist.append({"dir": root, "file": name})
+            if target is not None:
+                if name == target:
+                    runlist.append({"dir": root, "file": name})
+            else:
+                if batch_mode:
+                    if name.upper().startswith("DSSBATCH"):
+                        runlist.append({"dir": root, "file": name})
+                else:
+                    if name.upper().endswith("X"):
+                        runlist.append({"dir": root, "file": name})
     return runlist
 
 

@@ -18,7 +18,7 @@ def get_site_raster_value(dataset, band, site):
     data = []
     try:
         data = band[row, col]
-        if (data is ma.masked):
+        if data is ma.masked:
             data = None
     except IndexError:
         data = None
@@ -78,7 +78,7 @@ def get_shp_profile(f):
 
 def extract_vector_coords(f):
     points = []
-    with fiona.open(f, 'r') as source:
+    with fiona.open(f, "r") as source:
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":
                 points.append(feature["geometry"]["coordinates"][0])
@@ -89,7 +89,7 @@ def extract_vector_coords(f):
 
 def find_vector_coords(f, lng, lat, a):
     coords = (lng, lat)
-    with fiona.open(f, 'r') as source:
+    with fiona.open(f, "r") as source:
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":
                 if coords in feature["geometry"]["coordinates"]:
@@ -103,15 +103,21 @@ def find_closest_vector_coords(f, lng, lat, a):
     coords = Point(lng, lat)
     points = []
     ids = []
-    with fiona.open(f, 'r') as source:
+    with fiona.open(f, "r") as source:
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":
-                points.extend([Point(p[0], p[1]) for p in feature["geometry"]["coordinates"]])
-                ids.extend([feature["properties"][a]] * len(feature["geometry"]["coordinates"]))
+                points.extend(
+                    [Point(p[0], p[1]) for p in feature["geometry"]["coordinates"]]
+                )
+                ids.extend(
+                    [feature["properties"][a]] * len(feature["geometry"]["coordinates"])
+                )
             if feature["geometry"]["type"] == "Point":
                 points.append(
-                    Point(feature["geometry"]["coordinates"][0],
-                          feature["geometry"]["coordinates"][1])
+                    Point(
+                        feature["geometry"]["coordinates"][0],
+                        feature["geometry"]["coordinates"][1],
+                    )
                 )
                 ids.append(feature["properties"][a])
     mp = MultiPoint(points)

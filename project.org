@@ -1,0 +1,41 @@
+#+TITLE: Pythia Project Notes
+
+* Task List
+** DONE Implement ~run_mode~ in the ~dssat~ configuration.
+- Default is ~A~
+- Used to support ~forecast mode~
+** DONE Add ~FODATE~ to template
+- Default is ~-99~
+** PENDING Add ~append_column~ in the ~analytics_setup~ configuration
+- Will add a column ~x~ to the end of each line of output.
+- "appendColumns": [{"HARVEST_AREA": "from_config::$harvestArea"}, {"VNAM": "subtract::out$cnam::out$gnam"}]
+- Have to make sure the from_config is specific to a run. This means the run needs to be persisted through to the ~calculate_outputs()~ function.
+** DONE Validate ~vector::~ function works to feed any fields.
+** DONE Batch mode support
+- [X] Configuration option to specify batch file to use.
+- [X] Default the batch file to DSSBatch.v4x
+** TODO auto-include LAT/LNG if -99 in the DSSAT XFile
+** TODO Auto-generate DSSBatch.v4x when needed for batch mode.
+* Execution Notes
+** Batch file support
+In order to use batch file support modes (specified by ~CheckRunMode.f90~), you should use ~includes~ to copy the batch file to every run directory. This should be in your ~default_setup~ or ~runs~ blocks.
+*NOTE* Forecast mode (~"run_mode": "Y"~) only works with DSSAT v4.8 and higher. The FileX should include any forecast mode parameters, even if they aren't specified in the configuration file. Defaults will be used.
+
+* Breaking Changes (v3.0)
+** Move analytics to output
+"output": [
+{
+"filename": "summary.csv",
+** Support for single output file
+"singleOutput": true,
+** Suppffort for adding columns
+"outputColumns": [{"HARVEST_AREA": "from_config::harvestArea"}. {"VNAM": "subtract::$cnam, $gnam"}],
+** Support for filtering columns
+"outputColumns": [HARVEST_AREA, "NVAM", "LAT", "LNG"],
+},
+"filename": "daily.csv",
+"singleOutput": true,
+"outputColumns": ["SOME", "VARIABLE"]
+]
+* Windows-specific issues?
+** 

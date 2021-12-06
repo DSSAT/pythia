@@ -8,13 +8,13 @@ General
 This is the root of the JSON object. All values in this section are considered to be globally available.
 
 name
-   :Type: no whitespace string 
+   :Type: no whitespace string
    :Required: true
    :Description: The name of this configuration.
-   
+
 
 workDir
-   :Type: directory string 
+   :Type: directory string
    :Required: true
    :Description: The root output directory of this run. All DSSAT files will generated under this directory.
 
@@ -32,13 +32,13 @@ cores
    :Type: positive integer
    :Default value: number of logical CPUs available.
    :Description: The number of cores to be used by pythia. Cores are used to execute the model.
-   
+
 
 threads
    :Type: positive integer
    :Default value: number of cores available / 2
-   :Description: The number of threads to be used by pythia. This is used for I/O work. 
-   
+   :Description: The number of threads to be used by pythia. This is used for I/O work.
+
 sample
    :Type: positive integer
    :Description: Used to subset the data. Applies the configuration the first *x* number of valid simulations. This may be different between runs.
@@ -71,8 +71,6 @@ sites
    :Example: ::
 
       {"sites": [[29.6340239,-82.3631502]]}
-
-               
 
 startYear
    :Type: 4-digit year
@@ -107,7 +105,7 @@ DSSAT Structures
 ~~~~~~~~~~~~~~~~
 
 ic_layers
-   :Type: Array of initial condition layer objects 
+   :Type: Array of initial condition layer objects
    :Shape: ``[{"icbl": <value>, "sh2o": <value>, "shn4": <value>, "sno3": <value>},...]``
    :Helper function: ``generate_ic_layers``
 

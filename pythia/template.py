@@ -12,9 +12,9 @@ _t_formats = {
     "icres": {"length": 6},
     "icren": {"length": 6},
     "icbl": {"length": 6},
-    "sh2o": {"length": 6},
-    "snh4": {"length": 6},
-    "sno3": {"length": 6},
+    "sh2o": {"fmt": ":>6.3f"},
+    "snh4": {"fmt": ":>6.2f"},
+    "sno3": {"fmt": ":>6.2f"},
     "fdate": {"length": 5},
     "fdap": {"length": 5},
     "famn": {"length": 5},
@@ -25,43 +25,66 @@ _t_formats = {
     "fhdur": {"length": 5},
     "irrig": {"length": 5},
     "erain": {"raw": "M{:>4}"},
-    "ph2ol": {"length": 5}
+    "ph2ol": {"length": 5},
+    "fodate": {"length": 7},
+    "pdate": {"length": 5},
+    "pfrst": {"length": 5},
+    "plast": {"length": 5},
+    "hdate": {"length": 5}
 }
 
-_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate"]
+_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "fodate", "hdate"]
+_t_date_fields_4 = ["fodate"]
 
 
 def init_engine(template_dir):
-    return Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True)
+    return Environment(
+        loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
+    )
+
+
+def wrap_format(k, v):
+    fmt = ""
+    if k in _t_formats:
+        if "raw" in _t_formats[k]:
+            fmt = _t_formats[k]["raw"]
+        elif "fmt" in _t_formats[k]:
+            fmt = "{" + _t_formats[k]["fmt"] + "}"
+        else:
+            fmt_align = _t_formats[k].get("align", ":>")
+            fmt_pad = _t_formats[k].get("pad_with", "")
+            if isinstance(v, float):
+                fmt_len = "{}.1f".format(_t_formats[k]["length"])
+            elif isinstance(v, int):
+                fmt_len = "{}d".format(_t_formats[k]["length"])
+            else:
+                if "length" in _t_formats[k]:
+                    fmt_len = "{}".format(_t_formats[k]["length"])
+                else:
+                    fmt_len = ""
+            fmt = "{" + fmt_align + fmt_pad + fmt_len + "}"
+    else:
+        fmt = "{}"
+    return fmt.format(v)
 
 
 def auto_format_dict(d):
     if isinstance(d, str):
         return d
     clean = {}
+    for k in _t_formats:
+        v = _t_formats[k]
+        if "default" in v:
+            clean[k] = wrap_format(k, v["default"])
+        else:
+            clean[k] = wrap_format(k, -99)
     for k, v in d.items():
         if k in _t_date_fields and "::" not in v:
             clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
+        elif k in _t_date_fields_4 and "::" not in v:
+            clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
         elif k in _t_formats:
-            fmt = ""
-            if "raw" in _t_formats[k]:
-                fmt = _t_formats[k]["raw"]
-            elif "fmt" in _t_formats[k]:
-                fmt = "{" + _t_formats[k]["fmt"] + "}"
-            else:
-                fmt_align = _t_formats[k].get("align", ":>")
-                fmt_pad = _t_formats[k].get("pad_with", "")
-                if isinstance(v, float):
-                    fmt_len = "{}.1f".format(_t_formats[k]["length"])
-                elif isinstance(v, int):
-                    fmt_len = "{}d".format(_t_formats[k]["length"])
-                else:
-                    if "length" in _t_formats[k]:
-                        fmt_len = "{}".format(_t_formats[k]["length"])
-                    else:
-                        fmt_len = ""
-                fmt = "{" + fmt_align + fmt_pad + fmt_len + "}"
-            clean[k] = fmt.format(v)
+            clean[k] = wrap_format(k, v)
         elif isinstance(v, dict):
             clean[k] = auto_format_dict(v)
         elif isinstance(v, list) and not isinstance(v, str):
