@@ -35,4 +35,3 @@ In order to use batch file support modes (specified by ~CheckRunMode.f90~), you 
 "singleOutput": true,
 "outputColumns": ["SOME", "VARIABLE"]
 ]
-
