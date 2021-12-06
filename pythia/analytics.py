@@ -168,6 +168,7 @@ def collate_outputs(config, run):
     out_file = os.path.join(out_dir, per_pixel_file_name)
     harea_info = run.get("harvestArea", None)
     pop_info = run.get("population", None)
+    season_info = run.get("season", None)
     collected_first_line = False
     for current_dir in _generated_run_files(work_dir, "summary.csv"):
         lat, lng = extract_ll(current_dir)
@@ -183,6 +184,8 @@ def collate_outputs(config, run):
             ds_pop: Optional[_GeneratorContextManager[DatasetReader]] = None
             band_harea = None
             band_pop = None
+            if season_info:
+                additional_headers = f"{additional_headers},SEASON"
             if harea_info:
                 additional_headers = f"{additional_headers},HARVEST_AREA"
                 harea_tiff = harea_info.split("::")[1]
@@ -200,6 +203,8 @@ def collate_outputs(config, run):
                         collected_first_line = True
                 else:
                     to_write = (lat, lng, run.get("name", ""))
+                    if season_info is not None:
+                        to_write = to_write + (season_info,)
                     if ds_harea is not None and not ds_harea.closed:
                         harea = pythia.io.get_site_raster_value(
                             ds_harea, band_harea, (float(lng), float(lat))
