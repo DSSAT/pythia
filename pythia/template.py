@@ -33,7 +33,7 @@ _t_formats = {
     "hdate": {"length": 5}
 }
 
-_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "fodate", "hdate"]
+_t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]
 _t_date_fields_4 = ["fodate"]
 
 
