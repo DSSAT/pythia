@@ -1,0 +1,54 @@
+= Pythia Project Notes
+Christopher Villalobos <cvillalobos@ufl.edu>
+:toc:
+
+== Task List
+* [x] Implement `run_mode` in the `dssat` configuration.
+** Default is `A`
+** Used to support `forecast mode`
+* [x] Add `FODATE` to template
+** Default is `-99`
+* [x] Validate `vector::` function works to feed any fields.
+* [x] Batch mode support
+** [x] Configuration option to specify batch file to use.
+** [x] Default the batch file to DSSBatch.v4x
+* [ ] Auto-include LAT/LNG if -99 in the DSSAT XFile
+* [ ] Auto-generate DSSBatch.v4x when needed for batch mode.
+* [x] Hardwire "season" variable in output
+* [x] Hardwire "management" variable in output
+
+== Execution Notes
+=== Batch file support
+In order to use batch file support modes (specified by `CheckRunMode.f90`), you should use `includes` to copy the batch file to every run directory. This should be in your `default_setup` or `runs` blocks.
+NOTE: Forecast mode (`"run_mode": "Y"`) only works with DSSAT v4.8 and higher. The FileX should include any forecast mode parameters, even if they aren't specified in the configuration file. Defaults will be used.
+
+= Breaking Changes (v3.0)
+== Move analytics to output
+--
+"output": [
+{
+"filename": "summary.csv",
+--
+
+* Support for single output file
+--
+"singleOutput": true,
+--
+
+* Support for adding columns
+--
+"outputColumns": [{"HARVEST_AREA": "from_config::harvestArea"}. {"VNAM": "subtract::$cnam, $gnam"}],
+--
+
+* Support for filtering columns
+
+NOTE: All hardwired variables will be removed in 3.0
+
+--
+"outputColumns": [HARVEST_AREA, "NVAM", "LAT", "LNG"],
+},
+"filename": "daily.csv",
+"singleOutput": true,
+"outputColumns": ["SOME", "VARIABLE"]
+]
+--
