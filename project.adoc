@@ -24,31 +24,31 @@ NOTE: Forecast mode (`"run_mode": "Y"`) only works with DSSAT v4.8 and higher. T
 
 = Breaking Changes (v3.0)
 == Move analytics to output
---
+----
 "output": [
 {
 "filename": "summary.csv",
---
+----
 
 * Support for single output file
---
+----
 "singleOutput": true,
---
+----
 
 * Support for adding columns
---
+----
 "outputColumns": [{"HARVEST_AREA": "from_config::harvestArea"}. {"VNAM": "subtract::$cnam, $gnam"}],
---
+----
 
 * Support for filtering columns
 
 NOTE: All hardwired variables will be removed in 3.0
 
---
+----
 "outputColumns": [HARVEST_AREA, "NVAM", "LAT", "LNG"],
 },
 "filename": "daily.csv",
 "singleOutput": true,
 "outputColumns": ["SOME", "VARIABLE"]
 ]
---
+----
