@@ -16,6 +16,7 @@ Christopher Villalobos <cvillalobos@ufl.edu>
 * [ ] Auto-generate DSSBatch.v4x when needed for batch mode.
 * [x] Hardwire "season" variable in output
 * [x] Hardwire "management" variable in output
+* [x] Hardwire "late_season" variable in output (binary)
 
 == Execution Notes
 === Batch file support

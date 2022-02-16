@@ -170,6 +170,7 @@ def collate_outputs(config, run):
     pop_info = run.get("population", None)
     season_info = run.get("season", None)
     mgmt_info = run.get("management", None)
+    late_season_flag = run.get("lateSeason", False)
     collected_first_line = False
     for current_dir in _generated_run_files(work_dir, "summary.csv"):
         lat, lng = extract_ll(current_dir)
@@ -186,7 +187,7 @@ def collate_outputs(config, run):
             band_harea = None
             band_pop = None
             if season_info:
-                additional_headers = f"{additional_headers},SEASON"
+                additional_headers = f"{additional_headers},SEASON,LATE_SEASON"
             if mgmt_info:
                 additional_headers = f"{additional_headers},MGMT"
             if harea_info:
@@ -199,6 +200,7 @@ def collate_outputs(config, run):
                 pop_tiff = pop_info.split("::")[1]
                 ds_pop = rasterio.open(pop_tiff)
                 band_pop = ds_pop.read(1)
+                band_pop = ds_pop.read(1)
             for i, line in enumerate(source):
                 if i == 0:
                     if not collected_first_line:
@@ -208,6 +210,10 @@ def collate_outputs(config, run):
                     to_write = (lat, lng, run.get("name", ""))
                     if season_info is not None:
                         to_write = to_write + (season_info,)
+                        if late_season_flag:
+                            to_write = to_write + (str(True),)
+                        else:
+                            to_write = to_write + (str(False),)
                     if mgmt_info is not None:
                         to_write = to_write + (mgmt_info,)
                     if ds_harea is not None and not ds_harea.closed:
