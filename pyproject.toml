@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pythia"
-version = "2.1.dev4"
+version = "2.1.dev5"
 description = "An extensible gridded modeling framework for point-based modeling."
 authors = ["Christopher Villalobos <cvillalobos@ufl.edu>"]
 license = "BSD-3-Clause"
