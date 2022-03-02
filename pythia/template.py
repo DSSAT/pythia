@@ -1,4 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
+import logging
+import pythia.functions
 import pythia.util
 
 _t_formats = {
@@ -24,7 +26,6 @@ _t_formats = {
     "flhst": {"length": 5},
     "fhdur": {"length": 5},
     "irrig": {"length": 5},
-    "erain": {"raw": "M{:>4}"},
     "ph2ol": {"length": 5},
     "fodate": {"length": 7},
     "pdate": {"length": 5},
@@ -35,6 +36,7 @@ _t_formats = {
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]
 _t_date_fields_4 = ["fodate"]
+_t_envmod_fields = ["eday", "erad", "emax", "emin", "erain", "eco2", "edew", "ewind"]
 
 
 def init_engine(template_dir):
@@ -68,6 +70,20 @@ def wrap_format(k, v):
     return fmt.format(v)
 
 
+def envmod_format(v):
+    fmt = "{}{:>4}"
+    valid_mod = ["R", "A", "M"]
+    mod, raw = v[0], v[1:]
+    if mod not in valid_mod:
+        logging.error('"%s" is not a valid envmod modifier.', mod)
+        return fmt.format("A", "0")
+    val = pythia.functions.string_to_number(raw)
+    if val is None:
+        return fmt.format("A", "0")
+    return "{}{:>4}".format(mod, val)
+
+
+
 def auto_format_dict(d):
     if isinstance(d, str):
         return d
@@ -83,6 +99,8 @@ def auto_format_dict(d):
             clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
         elif k in _t_date_fields_4 and "::" not in v:
             clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
+        elif k in _t_envmod_fields:
+            clean[k] = envmod_format(v)
         elif k in _t_formats:
             clean[k] = wrap_format(k, v)
         elif isinstance(v, dict):
