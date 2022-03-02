@@ -6,9 +6,9 @@ authors = ["Christopher Villalobos <cvillalobos@ufl.edu>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 fiona = "^1.8"
-jinja2 = "^2.10"
+jinja2 = "^3.0"
 numpy = "^1.16"
 rasterio = "^1.0"
 shapely = "^1.6"
@@ -24,6 +24,7 @@ pyls-isort = "^0.2.2"
 python-lsp-black = "^1.0.0"
 pylsp-rope = "^0.1.7"
 pyls-flake8 = "^0.4.0"
+ipython = "^8.1.0"
 
 [tool.poetry.scripts]
 pythia = "pythia.cli:main"
