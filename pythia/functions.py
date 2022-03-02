@@ -221,3 +221,13 @@ def date_offset(k, run, context, _):
     else:
         logging.error("date_offset only works with references variables.")
         return None
+
+def string_to_number(term):
+    try:
+        if "." in term:
+            return float(term)
+        else:
+            return int(term)
+    except ValueError:
+        logging.error("string_to_number: %s is not a number", term)
+        return None
