@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import logging
+import os
 from pythia.plugin import register_plugin_function, PluginHook
 import pythia.util
 
@@ -82,6 +83,22 @@ def merge_static(statics, factor):
     return list(factor) + statics
 
 
+def _uniq_factors(factor_list):
+    uniq = []
+    for factors in factor_list:
+        if len(uniq) == 0:
+            uniq.append(factors)
+        else:
+            uniq_test = [u == factors for u in uniq]
+            if True in uniq_test:
+                pass
+            else:
+                uniq.append(factors)
+    return uniq
+
+
+
+
 def generate_sensitivity_runs(plugin_config={}, full_config={}):
     sens = {
         "_sens_pre_context": {},
@@ -90,6 +107,7 @@ def generate_sensitivity_runs(plugin_config={}, full_config={}):
         "_sens_post_context_static": {},
     }
     # First we organize them
+    runs = full_config.get("runs", {})
     for k in plugin_config.keys():
         if k == "no_rename":
             continue
@@ -118,19 +136,20 @@ def generate_sensitivity_runs(plugin_config={}, full_config={}):
             ]
         )
     )
-    factors = [merge_static(statics, f) for f in factorial]
+    combined_factors = [merge_static(statics, f) for f in factorial]
     # Next we generate the new runs for each analysis
-    runs = full_config.get("runs", [])
     out_runs = []
     for run in runs:
         current_name = run["name"]
         current_workDir = run["workDir"]
-        for factor in factors:
+        prefilter = [filter_unfactorable(run, f) for f in combined_factors]
+        uniq = _uniq_factors(prefilter)
+        for factors in uniq:
             if not plugin_config.get("no_rename", False):
-                f = generate_factorial_name(factor)
+                f = generate_factorial_name(factors)
                 run["name"] = current_name + "__" + f
                 run["workDir"] = current_workDir + "__" + f
-            out_runs.append({**run, **{"_sens": factor}})
+            out_runs.append({**run, **{"_sens": factors}})
     out_runs = [apply_factors("_sens_pre_context", run) for run in out_runs]
     out_runs = [apply_factors("_sens_pre_context_static", run) for run in out_runs]
     full_config["runs"] = out_runs
@@ -145,6 +164,22 @@ def generate_factorial_name(factors):
             if factor["hook"].endswith("context")
         ]
     )
+
+
+def _factorable(run, factor):
+    if factor["hook"].endswith("static"):
+        var = factor["from"]
+    else:
+        var = factor["var"]
+    if factor["method"] != "env_mod" and var not in run:
+        logging.error("sensitivity_plugin: %s requires %s to be specified in the JSON config file. This factor is NOT being applied to run %s", factor["method"], var, run["name"]) 
+        return False 
+    else:
+        return True
+
+
+def filter_unfactorable(run, factors):
+    return [f for f in factors if _factorable(run, f)]
 
 
 def post_build_context_apply_factors(config={}, context={}):
@@ -163,11 +198,15 @@ def apply_factors(hook, current_context):
     for cf in current_factors:
         cval = None
         if hook.endswith("static"):
-            cval = current_context[cf["from"]]
+            cvar = cf["from"]
         else:
-            cval = current_context[cf["var"]]
-        if cf["method"] in call_list:
-            current_context[cf["var"]] = call_list[cf["method"]](cval, cf["val"])
+            cvar = cf["var"]
+        cval = current_context.get(cvar, -99)
+        if cval == -99 and cf["method"] != "env_mod":
+            logging.error("sensitivity_plugin: %s requires %s to be specified in the JSON config file. This factor is NOT being applied.", cf["method"], cvar) 
+        else:
+            if cf["method"] in call_list:
+                current_context[cf["var"]] = call_list[cf["method"]](cval, cf["val"])
     return current_context
 
 
