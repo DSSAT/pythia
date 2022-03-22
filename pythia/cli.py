@@ -41,6 +41,11 @@ def main():
         default="pythia",
         help="Prefix the log file with this string. <prefix|pythia>-YYYYmmdd-hhMMSS.log",
     )
+    parser.add_argument(
+            "--quiet",
+            action="store_true",
+            help="Enjoy the silence"
+            )
     args = parser.parse_args()
 
     if not args.config:
@@ -73,6 +78,10 @@ def main():
             config = pythia.plugin.run_plugin_functions(
                 pythia.plugin.PluginHook.post_config, plugins, full_config=config
             )
+            if args.quiet:
+                config["silence"] = True
+            else:
+                config["silence"] = False
             if args.all or args.setup:
                 print("Setting up points and directory structure")
                 pythia.peerless.execute(config, plugins)
