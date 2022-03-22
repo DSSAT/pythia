@@ -5,6 +5,8 @@ import subprocess
 from multiprocessing.pool import Pool
 
 
+async_error = False
+
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
     run_mode = "A"
@@ -66,8 +68,22 @@ def display_async(details):
             out.decode()[:-1],
         )
         print("X", end="", flush=True)
+        async_error = True
     else:
         print(".", end="", flush=True)
+
+
+def silent_async(details):
+    loc, xfile, out, error, retcode = details
+    error_count = len(out.decode().split("\n")) - 1
+    if error_count > 0:
+        logging.warning(
+            "Check the DSSAT summary file in %s. %d failures occured\n%s",
+            loc,
+            error_count,
+            out.decode()[:-1],
+        )
+        async_error = True
 
 
 def execute(config, plugins):
@@ -75,7 +91,11 @@ def execute(config, plugins):
     run_list = _generate_run_list(config)
     with Pool(processes=pool_size) as pool:
         for details in run_list:  # _generate_run_list(config):
-            pool.apply_async(_run_dssat, (details, config), callback=display_async)
+            if config["silence"]:
+                pool.apply_async(_run_dssat, (details, config), callback=silent_async)
+            else:
+                pool.apply_async(_run_dssat, (details, config), callback=display_async)
         pool.close()
         pool.join()
-    print("\nIf you see an X above, please check the pythia.log for more details")
+    if async_error:
+        print("\nOne or more simulations had failures. Please check the pythia log for more details")

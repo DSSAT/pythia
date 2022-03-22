@@ -9,9 +9,11 @@ import pythia.plugin
 import pythia.util
 
 
+
 def build_context(args):
-    print("+", end="", flush=True)
     run, ctx, config = args
+    if not config["silence"]:
+        print("+", end="", flush=True)
     context = run.copy()
     context = {**context, **ctx}
     y, x = pythia.util.translate_coords_news(context["lat"], context["lng"])
@@ -58,7 +60,8 @@ def symlink_wth_soil(output_dir, config, context):
 
 
 def compose_peerless(context, config, env):
-    print(".", end="", flush=True)
+    if not config["silence"]:
+        print(".", end="", flush=True)
     this_output_dir = context["contextWorkDir"]
     symlink_wth_soil(this_output_dir, config, context)
     xfile = pythia.template.render_template(env, context["template"], context)
@@ -93,8 +96,10 @@ def execute(config, plugins):
                 )
                 runlist.append(os.path.abspath(compose_peerless(context, config, env)))
             else:
-                print("X", end="", flush=True)
+                if not config["silence"]:
+                    print("X", end="", flush=True)
     if config["exportRunlist"]:
         with open(os.path.join(config["workDir"], "run_list.txt"), "w") as f:
             [f.write(f"{x}\n") for x in runlist]
-    print()
+    if not config["silence"]:
+        print()
