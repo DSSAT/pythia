@@ -101,23 +101,26 @@ def auto_format_dict(d):
     for k in _t_envmod_fields:
         clean[k] = envmod_format("A0")
     for k, v in d.items():
-        if k in _t_date_fields and "::" not in v:
-            clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
-        elif k in _t_date_fields_4 and "::" not in v:
-            clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
-        elif k in _t_envmod_fields:
-            clean[k] = envmod_format(v)
-        elif k in _t_formats:
-            clean[k] = wrap_format(k, v)
-        elif isinstance(v, dict):
-            clean[k] = auto_format_dict(v)
-        elif isinstance(v, list) and not isinstance(v, str):
-            if k == "sites":
-                continue
-            else:
-                clean[k] = [auto_format_dict(intern) for intern in v]
+        if v == "-99" or v == -99:
+            clean[k] = wrap_format(v)
         else:
-            clean[k] = v
+            if k in _t_date_fields and "::" not in v:
+                clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
+            elif k in _t_date_fields_4 and "::" not in v:
+                clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
+            elif k in _t_envmod_fields:
+                clean[k] = envmod_format(v)
+            elif k in _t_formats:
+                clean[k] = wrap_format(k, v)
+            elif isinstance(v, dict):
+                clean[k] = auto_format_dict(v)
+            elif isinstance(v, list) and not isinstance(v, str):
+                if k == "sites":
+                    continue
+                else:
+                    clean[k] = [auto_format_dict(intern) for intern in v]
+            else:
+                clean[k] = v
     return clean
 
 
