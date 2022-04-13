@@ -87,7 +87,6 @@ def envmod_format(v):
     return "{}{:>4}".format(mod, val)
 
 
-
 def auto_format_dict(d):
     if isinstance(d, str):
         return d
@@ -104,7 +103,10 @@ def auto_format_dict(d):
         if k in _t_date_fields and "::" not in v:
             clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
         elif k in _t_date_fields_4 and "::" not in v:
-            clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
+            if v == "-99" or v == -99:
+                clean[k] = v
+            else:
+                clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
         elif k in _t_envmod_fields:
             clean[k] = envmod_format(v)
         elif k in _t_formats:
