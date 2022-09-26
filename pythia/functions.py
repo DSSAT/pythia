@@ -99,7 +99,7 @@ def lookup_ghr(k, run, context, config):
         logging.debug("lookup_ghr - context[%s] => %s", k, context[k])
         if "ghr_profiles" not in cache:
             build_ghr_cache(config)
-        tif_profile_id = int(str(context[k]))
+        tif_profile_id = int(float(str(context[k])))
         if tif_profile_id not in cache["ghr_profiles"]:
             logging.error(
                 "Invalid soil ID (%d) at (%f,%f)",
