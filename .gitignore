@@ -13,3 +13,4 @@ docs/build
 .venv
 dist
 *~
+.python-version

@@ -41,11 +41,7 @@ def main():
         default="pythia",
         help="Prefix the log file with this string. <prefix|pythia>-YYYYmmdd-hhMMSS.log",
     )
-    parser.add_argument(
-            "--quiet",
-            action="store_true",
-            help="Enjoy the silence"
-            )
+    parser.add_argument("--quiet", action="store_true", help="Enjoy the silence")
     args = parser.parse_args()
 
     if not args.config:

@@ -31,7 +31,7 @@ _t_formats = {
     "pdate": {"length": 5},
     "pfrst": {"length": 5},
     "plast": {"length": 5},
-    "hdate": {"length": 5}
+    "hdate": {"length": 5},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]

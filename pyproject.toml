@@ -7,7 +7,7 @@ license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fiona = "^1.8"
+Fiona = "^1.8"
 jinja2 = "^3.0"
 numpy = "^1.16"
 rasterio = "^1.0"
@@ -16,7 +16,6 @@ rtree = "^0.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.1"
-black = "^21.5b2"
 flake8 = "^3.9.2"
 neovim = "^0.3.1"
 python-lsp-server = {extras = ["all"], version = "^1.2.4"}
@@ -28,6 +27,9 @@ ipython = "^8.1.0"
 
 [tool.poetry.scripts]
 pythia = "pythia.cli:main"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.8.0"
 
 [build-system]
 requires = ["setuptools", "poetry-core>=1.0.0"]

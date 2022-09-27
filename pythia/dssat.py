@@ -7,6 +7,7 @@ from multiprocessing.pool import Pool
 
 async_error = False
 
+
 def _run_dssat(details, config):
     logging.debug("Current WD: {}".format(os.getcwd()))
     run_mode = "A"
@@ -98,4 +99,6 @@ def execute(config, plugins):
         pool.close()
         pool.join()
     if async_error:
-        print("\nOne or more simulations had failures. Please check the pythia log for more details")
+        print(
+            "\nOne or more simulations had failures. Please check the pythia log for more details"
+        )

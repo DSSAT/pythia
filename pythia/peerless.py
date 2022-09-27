@@ -4,10 +4,9 @@ import os
 
 import pythia.functions
 import pythia.io
-import pythia.template
 import pythia.plugin
+import pythia.template
 import pythia.util
-
 
 
 def build_context(args):

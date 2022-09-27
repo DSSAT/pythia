@@ -222,6 +222,7 @@ def date_offset(k, run, context, _):
         logging.error("date_offset only works with references variables.")
         return None
 
+
 def string_to_number(term):
     try:
         if "." in term:
