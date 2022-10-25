@@ -57,8 +57,7 @@ def lookup_wth(k, run, context, _):
     if "vector" in args:
         idx = args.index("vector")
         cell_id = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
-    return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
-
+    return {k: args[0], "wthFile": "{}.WTH".format(int(cell_id))}
 
 def generate_ic_layers(k, run, context, _):
     args = run[k].split("::")[1:]
