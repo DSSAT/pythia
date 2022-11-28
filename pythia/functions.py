@@ -41,6 +41,21 @@ def auto_planting_window(k, run, context, _):
         "plast": pythia.util.to_iso_date(last),
     }
 
+def auto_planting_window_doy(k, run, context, _):
+    """multiple rasters not yet supported"""
+    args = run[k].split("::")[1:]
+    raster_idx = args.index("raster")
+    args[raster_idx + 1] = context[k]
+    args.pop(raster_idx)
+    vals = [int(v) for v in args]
+    first = datetime.datetime(run["startYear"], 1, 1) + datetime.timedelta(vals[0] + vals[1] - 1)
+    td = datetime.timedelta(days=vals[2])
+    last = first + td
+    return {
+        "pdate": pythia.util.to_iso_date(first),
+        "pfrst": pythia.util.to_iso_date(first),
+        "plast": pythia.util.to_iso_date(last),
+    }
 
 def lookup_hc27(k, run, context, _):
     args = run[k].split("::")[1:]
