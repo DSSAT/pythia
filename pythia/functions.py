@@ -57,6 +57,24 @@ def auto_planting_window_doy(k, run, context, _):
         "plast": pythia.util.to_iso_date(last),
     }
 
+def auto_planting_window_doy_shape(k, run, context, _):
+    """multiple rasters not yet supported"""
+    args = run[k].split("::")[1:]
+    finder = pythia.io.find_closest_vector_coords
+    cell_doy = None
+    if "vector" in args:
+        idx = args.index("vector")
+        cell_doy = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
+
+    first = datetime.datetime(run["startYear"], 1, 1) + datetime.timedelta(int(cell_doy) + int(args[idx + 3]) )
+    td = datetime.timedelta(days=int(args[idx + 4]))
+    last = first + td
+    return {
+        "pdate": pythia.util.to_iso_date(first),
+        "pfrst": pythia.util.to_iso_date(first),
+        "plast": pythia.util.to_iso_date(last),
+    }
+
 def lookup_hc27(k, run, context, _):
     args = run[k].split("::")[1:]
     if "raster" in args:
@@ -73,6 +91,7 @@ def lookup_wth(k, run, context, _):
         idx = args.index("vector")
         cell_id = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
     return {k: args[0], "wthFile": "{}.WTH".format(int(cell_id))}
+
 
 def generate_ic_layers(k, run, context, _):
     args = run[k].split("::")[1:]
