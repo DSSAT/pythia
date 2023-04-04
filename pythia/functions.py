@@ -78,16 +78,14 @@ def build_ghr_cache(config):
     import sqlite3
 
     with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
-        cache["ghr_profiles"] = {}
+        ghr_profiles = {}
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM profile_map")
+        cursor.execute("SELECT * FROM profile_map where profile != ''")
         for row in cursor.fetchall():
-            if row["profile"] == "":
-                profile = None
-            else:
-                profile = row["profile"]
-            cache["ghr_profiles"][row["id"]] = profile
+            ghr_profiles[row["id"]] = row["profile"]
+
+        cache["ghr_profiles"] = ghr_profiles;
 
     pass
 
