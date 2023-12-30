@@ -93,7 +93,7 @@ def execute(config, plugins):
                     pythia.plugin.PluginHook.post_build_context,
                     plugins,
                     context=context,
-                )
+                ).get("context", context)
                 runlist.append(os.path.abspath(compose_peerless(context, config, env)))
             else:
                 if not config["silence"]:

@@ -13,13 +13,13 @@ def initialize(config, plugins, full_config):
     return plugins
 
 
-def sample_function(config={}):
+def sample_function(config={}, **kwargs):
     retval = config.get("value", 1)
     logging.info("[TEST PLUGIN] Running the sample_function()")
-    return retval
+    return {**kwargs, "config": config, "retval": retval}
 
 
-def contexted_function(config={}, context={}):
+def contexted_function(context={}, **kwargs):
     logging.info("[TEST PLUGIN] Running the contexted_function()")
     context["context_value"] = context.get("context_value", 2) + 1
-    return context
+    return {**kwargs, "context": context}
