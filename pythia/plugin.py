@@ -7,9 +7,15 @@ class PluginHook(Enum):
     post_config = 100
     pre_build_context = 200
     post_build_context = 300
+    post_peerless_pixel_success = 350
+    post_peerless_pixel_skip = 351
+    post_compose_peerless_pixel_success = 352
+    post_compose_peerless_pixel_skip = 353
     post_setup = 400
     pre_run = 500
     run_pixel = 600
+    post_run_pixel_success = 650
+    post_run_pixel_failed = 651
     post_run = 700
     pre_analysis = 800
     analyze_file = 900

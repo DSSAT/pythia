@@ -4,12 +4,12 @@ from pythia.plugin import PluginHook, register_plugin_function
 
 def initialize(config, plugins, full_config):
     logging.info("[TEST PLUGIN] Initializing plugin")
-    plugins = register_plugin_function(
-        PluginHook.post_config, sample_function, config, plugins
-    )
-    plugins = register_plugin_function(
-        PluginHook.post_build_context, contexted_function, config, plugins
-    )
+    plugins = register_plugin_function(PluginHook.post_config, sample_function, config, plugins)
+    plugins = register_plugin_function(PluginHook.post_build_context, contexted_function, config, plugins)
+    plugins = register_plugin_function(PluginHook.post_peerless_pixel_success, on_peerless_success, config, plugins)
+    plugins = register_plugin_function(PluginHook.post_peerless_pixel_skip, on_peerless_skip, config, plugins)
+    plugins = register_plugin_function(PluginHook.post_run_pixel_success, on_run_pixel_success, config, plugins)
+    plugins = register_plugin_function(PluginHook.post_run_pixel_failed, on_run_pixel_failed, config, plugins)
     return plugins
 
 
@@ -23,3 +23,23 @@ def contexted_function(context={}, **kwargs):
     logging.info("[TEST PLUGIN] Running the contexted_function()")
     context["context_value"] = context.get("context_value", 2) + 1
     return {**kwargs, "context": context}
+
+
+def on_peerless_success(*args, **kwargs):
+    logging.info("[TEST PLUGIN] peerless success")
+    return kwargs
+
+
+def on_peerless_skip(*args, **kwargs):
+    logging.info("[TEST PLUGIN] peerless skip")
+    return kwargs
+
+
+def on_run_pixel_success(*args, **kwargs):
+    logging.info("[TEST PLUGIN] run pixel success")
+    return kwargs
+
+
+def on_run_pixel_failed(*args, **kwargs):
+    logging.info("[TEST PLUGIN] run pixel failed")
+    return kwargs

@@ -11,7 +11,7 @@ import pythia.util
 
 
 def build_context(args):
-    run, ctx, config = args
+    run, ctx, config, plugins = args
     if not config["silence"]:
         print("+", end="", flush=True)
     context = run.copy()
@@ -28,13 +28,25 @@ def build_context(args):
                 else:
                     context = None
                     break
-    return context
+
+    hook = pythia.plugin.PluginHook.post_peerless_pixel_success
+    if context is None:
+        hook = pythia.plugin.PluginHook.post_peerless_pixel_skip
+
+    context = pythia.plugin.run_plugin_functions(
+        hook,
+        plugins,
+        context=context,
+        args={"run": run, "config": config, "ctx": ctx},
+    ).get("context", context)
+
+    return context, args
 
 
-def _generate_context_args(runs, peers, config):
+def _generate_context_args(runs, peers, config, plugins):
     for idx, run in enumerate(runs):
         for peer in peers[idx]:
-            yield run, peer, config
+            yield run, peer, config, plugins
 
 
 def symlink_wth_soil(output_dir, config, context):
@@ -82,8 +94,8 @@ def execute(config, plugins):
     print("RUNNING WITH POOL SIZE: {}".format(pool_size))
     env = pythia.template.init_engine(config["templateDir"])
     with mp.pool.ThreadPool(pool_size) as pool:
-        for context in pool.imap_unordered(
-            build_context, _generate_context_args(runs, peers, config), 250
+        for context, args in pool.imap_unordered(
+            build_context, _generate_context_args(runs, peers, config, plugins), 250
         ):
             if context is not None:
                 pythia.io.make_run_directory(context["contextWorkDir"])
@@ -95,7 +107,21 @@ def execute(config, plugins):
                     context=context,
                 ).get("context", context)
                 runlist.append(os.path.abspath(compose_peerless(context, config, env)))
+                pythia.plugin.run_plugin_functions(
+                    pythia.plugin.PluginHook.post_compose_peerless_pixel_success,
+                    plugins,
+                    input=context,
+                    config=config,
+                    env=env,
+                )
             else:
+                pythia.plugin.run_plugin_functions(
+                    pythia.plugin.PluginHook.post_compose_peerless_pixel_skip,
+                    plugins,
+                    input=context,
+                    config=config,
+                    env=env,
+                )
                 if not config["silence"]:
                     print("X", end="", flush=True)
     if config["exportRunlist"]:
