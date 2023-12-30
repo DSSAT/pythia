@@ -18,10 +18,8 @@ class PluginHook(Enum):
     post_run_pixel_success = 650
     post_run_pixel_failed = 651
     post_run_all = 700
-    pre_analysis = 800
-    analyze_file = 900
-    analyze_pixel = 1000
-    post_analysis = 1100
+    pre_analytics = 800
+    post_analytics = 900
 
 
 def register_plugin_function(hook, fun, config, plugins):
