@@ -132,7 +132,7 @@ def execute(config, plugins):
     pythia.plugin.run_plugin_functions(
         pythia.plugin.PluginHook.post_compose_peerless_all,
         plugins,
-        runlist=runlist,
+        run_list=runlist,
         config=config,
         env=env,
     )
