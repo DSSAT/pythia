@@ -11,6 +11,7 @@ class PluginHook(Enum):
     post_peerless_pixel_skip = 351
     post_compose_peerless_pixel_success = 352
     post_compose_peerless_pixel_skip = 353
+    post_compose_peerless_all = 354
     post_setup = 400
     pre_run = 500
     run_pixel = 600

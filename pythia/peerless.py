@@ -124,8 +124,15 @@ def execute(config, plugins):
                 )
                 if not config["silence"]:
                     print("X", end="", flush=True)
+
     if config["exportRunlist"]:
         with open(os.path.join(config["workDir"], "run_list.txt"), "w") as f:
             [f.write(f"{x}\n") for x in runlist]
-    if not config["silence"]:
-        print()
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.post_compose_peerless_all,
+        plugins,
+        runlist=runlist,
+        config=config,
+        env=env,
+    )
