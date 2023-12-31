@@ -17,7 +17,7 @@ class PluginHook(Enum):
     run_pixel = 600
     post_run_pixel_success = 650
     post_run_pixel_failed = 651
-    post_run = 700
+    post_run_all = 700
     pre_analysis = 800
     analyze_file = 900
     analyze_pixel = 1000

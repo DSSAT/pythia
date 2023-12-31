@@ -111,7 +111,15 @@ def execute(config, plugins):
                 pool.apply_async(_run_dssat, (details, config, plugins), callback=display_async)
         pool.close()
         pool.join()
+
     if async_error:
         print(
             "\nOne or more simulations had failures. Please check the pythia log for more details"
         )
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.post_run_all,
+        plugins,
+        config=config,
+        run_list=run_list,
+    )
