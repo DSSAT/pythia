@@ -1,5 +1,6 @@
 import logging
 import multiprocessing as mp
+import concurrent.futures
 import os
 
 import pythia.functions
@@ -68,6 +69,20 @@ def compose_peerless(context, config, env):
         f.write(xfile)
     return context["contextWorkDir"]
 
+def process_context(context, plugins, config, env):
+    if context is not None:
+        pythia.io.make_run_directory(context["contextWorkDir"])
+        # Post context hook
+        logging.debug("[PEERLESS] Running post_build_context plugins")
+        context = pythia.plugin.run_plugin_functions(
+            pythia.plugin.PluginHook.post_build_context,
+            plugins,
+            context=context,
+        )
+        return os.path.abspath(compose_peerless(context, config, env))
+    else:
+        if not config["silence"]:
+            print("X", end="", flush=True)
 
 def execute(config, plugins):
     runs = config.get("runs", [])
@@ -77,26 +92,30 @@ def execute(config, plugins):
     for run in runs:
         pythia.io.make_run_directory(os.path.join(config["workDir"], run["name"]))
     peers = [pythia.io.peer(r, config.get("sample", None)) for r in runs]
-    pool_size = config.get("threads", mp.cpu_count() * 10)
+    pool_size = config.get("threads", mp.cpu_count())
     print("RUNNING WITH POOL SIZE: {}".format(pool_size))
     env = pythia.template.init_engine(config["templateDir"])
-    with mp.pool.ThreadPool(pool_size) as pool:
-        for context in pool.imap_unordered(
+    pythia.functions.build_ghr_cache(config)
+
+    with mp.Pool(pool_size) as pool:
+        results = pool.imap_unordered(
             build_context, _generate_context_args(runs, peers, config), 250
-        ):
-            if context is not None:
-                pythia.io.make_run_directory(context["contextWorkDir"])
-                # Post context hook
-                logging.debug("[PEERLESS] Running post_build_context plugins")
-                context = pythia.plugin.run_plugin_functions(
-                    pythia.plugin.PluginHook.post_build_context,
-                    plugins,
-                    context=context,
-                )
-                runlist.append(os.path.abspath(compose_peerless(context, config, env)))
-            else:
-                if not config["silence"]:
-                    print("X", end="", flush=True)
+        )
+        with concurrent.futures.ProcessPoolExecutor(max_workers=pool_size) as executor:
+            # Use submit to asynchronously execute the process_context function for each context
+            future_to_result = {executor.submit(process_context, context, plugins, config, env): context for context in results}
+
+            # Iterate through the completed futures
+            runlist = []
+            for future in concurrent.futures.as_completed(future_to_result):
+                try:
+                    result = future.result()
+                    if result is not None:
+                        runlist.append(result)
+                except Exception as e:
+                    # Handle exceptions if any occurred during processing
+                    print(f"Error processing context: {e}")
+
     if config["exportRunlist"]:
         with open(os.path.join(config["workDir"], "run_list.txt"), "w") as f:
             [f.write(f"{x}\n") for x in runlist]
