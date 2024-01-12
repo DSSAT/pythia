@@ -54,7 +54,7 @@ def filter_columns(config, outputs):
         out_file = os.path.join(
             out_dir, "filtered_{}".format(os.path.basename(current_file))
         )
-        with open(current_file) as source, open(out_file, "w") as dest:
+        with open(current_file) as source, open(out_file, "w", newline = '') as dest:
             dssat_in = csv.reader(source)
             dssat_out = csv.writer(dest)
             try:
@@ -93,7 +93,7 @@ def calculate_columns(config, outputs):
         out_file = os.path.join(
             out_dir, "calculated_{}".format(os.path.basename(current_file))
         )
-        with open(current_file) as source, open(out_file, "w") as dest:
+        with open(current_file) as source, open(out_file, "w", newline = '') as dest:
             dssat_in = csv.reader(source)
             dssat_out = csv.writer(dest)
             num_cols = 0
