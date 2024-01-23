@@ -84,6 +84,7 @@ def process_context(context, plugins, config, env):
         if not config["silence"]:
             print("X", end="", flush=True)
 
+
 def execute(config, plugins):
     runs = config.get("runs", [])
     if len(runs) == 0:
@@ -91,30 +92,26 @@ def execute(config, plugins):
     runlist = []
     for run in runs:
         pythia.io.make_run_directory(os.path.join(config["workDir"], run["name"]))
+
     peers = [pythia.io.peer(r, config.get("sample", None)) for r in runs]
     pool_size = config.get("threads", mp.cpu_count())
     print("RUNNING WITH POOL SIZE: {}".format(pool_size))
     env = pythia.template.init_engine(config["templateDir"])
     pythia.functions.build_ghr_cache(config)
 
-    with mp.Pool(pool_size) as pool:
-        results = pool.imap_unordered(
-            build_context, _generate_context_args(runs, peers, config), 250
-        )
-        with concurrent.futures.ProcessPoolExecutor(max_workers=pool_size) as executor:
-            # Use submit to asynchronously execute the process_context function for each context
-            future_to_result = {executor.submit(process_context, context, plugins, config, env): context for context in results}
+    # Parallelize the context build (build_context), it is CPU intensive because it
+    #  runs the functions (functions.py) declared in the config files.
+    with concurrent.futures.ProcessPoolExecutor(max_workers=pool_size) as executor:
+        tasks = _generate_context_args(runs, peers, config)
+        future_to_context = {executor.submit(build_context, task): task for task in tasks}
 
-            # Iterate through the completed futures
-            runlist = []
-            for future in concurrent.futures.as_completed(future_to_result):
-                try:
-                    result = future.result()
-                    if result is not None:
-                        runlist.append(result)
-                except Exception as e:
-                    # Handle exceptions if any occurred during processing
-                    print(f"Error processing context: {e}")
+        # process_context is mostly I/O intensive, no reason to parallelize it.
+        for future in concurrent.futures.as_completed(future_to_context):
+            context_result = future.result()
+            if context_result is not None:
+                processed_result = process_context(context_result, plugins, config, env)
+                if processed_result is not None:
+                    runlist.append(processed_result)
 
     if config["exportRunlist"]:
         with open(os.path.join(config["workDir"], "run_list.txt"), "w") as f:
