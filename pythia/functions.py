@@ -41,6 +41,39 @@ def auto_planting_window(k, run, context, _):
         "plast": pythia.util.to_iso_date(last),
     }
 
+def auto_planting_window_doy(k, run, context, _):
+    """multiple rasters not yet supported"""
+    args = run[k].split("::")[1:]
+    raster_idx = args.index("raster")
+    args[raster_idx + 1] = context[k]
+    args.pop(raster_idx)
+    vals = [int(v) for v in args]
+    first = datetime.datetime(run["startYear"], 1, 1) + datetime.timedelta(vals[0] + vals[1] - 1)
+    td = datetime.timedelta(days=vals[2])
+    last = first + td
+    return {
+        "pdate": pythia.util.to_iso_date(first),
+        "pfrst": pythia.util.to_iso_date(first),
+        "plast": pythia.util.to_iso_date(last),
+    }
+
+def auto_planting_window_doy_shape(k, run, context, _):
+    """multiple rasters not yet supported"""
+    args = run[k].split("::")[1:]
+    finder = pythia.io.find_closest_vector_coords
+    cell_doy = None
+    if "vector" in args:
+        idx = args.index("vector")
+        cell_doy = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
+
+    first = datetime.datetime(run["startYear"], 1, 1) + datetime.timedelta(int(cell_doy) + int(args[idx + 3]) )
+    td = datetime.timedelta(days=int(args[idx + 4]))
+    last = first + td
+    return {
+        "pdate": pythia.util.to_iso_date(first),
+        "pfrst": pythia.util.to_iso_date(first),
+        "plast": pythia.util.to_iso_date(last),
+    }
 
 def lookup_hc27(k, run, context, _):
     args = run[k].split("::")[1:]
@@ -57,7 +90,7 @@ def lookup_wth(k, run, context, _):
     if "vector" in args:
         idx = args.index("vector")
         cell_id = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
-    return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
+    return {k: args[0], "wthFile": "{}.WTH".format(int(cell_id))}
 
 
 def generate_ic_layers(k, run, context, _):
@@ -79,16 +112,14 @@ def build_ghr_cache(config):
     import sqlite3
 
     with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
-        cache["ghr_profiles"] = {}
+        ghr_profiles = {}
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM profile_map")
+        cursor.execute("SELECT * FROM profile_map where profile != ''")
         for row in cursor.fetchall():
-            if row["profile"] == "":
-                profile = None
-            else:
-                profile = row["profile"]
-            cache["ghr_profiles"][row["id"]] = profile
+            ghr_profiles[row["id"]] = row["profile"]
+
+        cache["ghr_profiles"] = ghr_profiles;
 
     pass
 
@@ -99,7 +130,7 @@ def lookup_ghr(k, run, context, config):
         logging.debug("lookup_ghr - context[%s] => %s", k, context[k])
         if "ghr_profiles" not in cache:
             build_ghr_cache(config)
-        tif_profile_id = int(str(context[k]))
+        tif_profile_id = int(float(str(context[k])))
         if tif_profile_id not in cache["ghr_profiles"]:
             logging.error(
                 "Invalid soil ID (%d) at (%f,%f)",

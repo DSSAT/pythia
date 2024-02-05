@@ -7,7 +7,7 @@ license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-Fiona = "^1.8"
+Fiona = "^1.9"
 jinja2 = "^3.0"
 numpy = "^1.16"
 rasterio = "^1.0"
