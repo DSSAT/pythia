@@ -97,8 +97,6 @@ def _uniq_factors(factor_list):
     return uniq
 
 
-
-
 def generate_sensitivity_runs(plugin_config={}, full_config={}):
     sens = {
         "_sens_pre_context": {},
@@ -172,8 +170,13 @@ def _factorable(run, factor):
     else:
         var = factor["var"]
     if factor["method"] != "env_mod" and var not in run:
-        logging.error("sensitivity_plugin: %s requires %s to be specified in the JSON config file. This factor is NOT being applied to run %s", factor["method"], var, run["name"]) 
-        return False 
+        logging.error(
+            "sensitivity_plugin: %s requires %s to be specified in the JSON config file. This factor is NOT being applied to run %s",
+            factor["method"],
+            var,
+            run["name"],
+        )
+        return False
     else:
         return True
 
@@ -203,7 +206,11 @@ def apply_factors(hook, current_context):
             cvar = cf["var"]
         cval = current_context.get(cvar, -99)
         if cval == -99 and cf["method"] != "env_mod":
-            logging.error("sensitivity_plugin: %s requires %s to be specified in the JSON config file. This factor is NOT being applied.", cf["method"], cvar) 
+            logging.error(
+                "sensitivity_plugin: %s requires %s to be specified in the JSON config file. This factor is NOT being applied.",
+                cf["method"],
+                cvar,
+            )
         else:
             if cf["method"] in call_list:
                 current_context[cf["var"]] = call_list[cf["method"]](cval, cf["val"])

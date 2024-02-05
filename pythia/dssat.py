@@ -8,6 +8,7 @@ import pythia.plugin
 
 async_error = False
 
+
 def _run_dssat(details, config, plugins):
     logging.debug("Current WD: {}".format(os.getcwd()))
     run_mode = "A"
