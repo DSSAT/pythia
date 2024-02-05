@@ -73,7 +73,7 @@ def main():
             plugins = pythia.plugin.load_plugins(config, {})
             config = pythia.plugin.run_plugin_functions(
                 pythia.plugin.PluginHook.post_config, plugins, full_config=config
-            )
+            ).get("full_config", config)
             if args.quiet:
                 config["silence"] = True
             else:

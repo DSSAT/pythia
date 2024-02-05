@@ -7,10 +7,17 @@ class PluginHook(Enum):
     post_config = 100
     pre_build_context = 200
     post_build_context = 300
+    post_peerless_pixel_success = 350
+    post_peerless_pixel_skip = 351
+    post_compose_peerless_pixel_success = 352
+    post_compose_peerless_pixel_skip = 353
+    post_compose_peerless_all = 354
     post_setup = 400
     pre_run = 500
     run_pixel = 600
-    post_run = 700
+    post_run_pixel_success = 650
+    post_run_pixel_failed = 651
+    post_run_all = 700
     pre_analysis = 800
     analyze_file = 900
     analyze_pixel = 1000
@@ -94,21 +101,13 @@ def load_plugins(config, plugins={}, module_prefix="pythia.plugins"):
 
 
 def run_plugin_functions(hook, plugins, **kwargs):
-    _return = {}
-    if hook == PluginHook.post_config:
-        _return = {**kwargs.get("full_config", {})}
-    elif hook == PluginHook.post_build_context:
-        _return = {**kwargs.get("context", {})}
+    _return = {**kwargs}
     if hook in plugins:
         for plugin_fun in plugins[hook]:
-            if hook == PluginHook.post_config:
-                _return = {
-                    **_return,
-                    **plugin_fun["fun"](plugin_fun.get("config", {}), _return),
-                }
-            elif hook == PluginHook.post_build_context:
-                _return = {
-                    **_return,
-                    **plugin_fun["fun"](plugin_fun.get("config", {}), _return),
-                }
+            plugin_fun_return = plugin_fun["fun"](plugin_fun.get("config", {}), _return, **kwargs)
+            _return = {
+                **_return,
+                **({} if plugin_fun_return is None else plugin_fun_return)
+            }
+
     return _return

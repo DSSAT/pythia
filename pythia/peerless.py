@@ -10,8 +10,7 @@ import pythia.template
 import pythia.util
 
 
-def build_context(args):
-    run, ctx, config = args
+def build_context(run, ctx, config, plugins):
     if not config["silence"]:
         print("+", end="", flush=True)
     context = run.copy()
@@ -28,13 +27,25 @@ def build_context(args):
                 else:
                     context = None
                     break
+
+    hook = pythia.plugin.PluginHook.post_peerless_pixel_success
+    if context is None:
+        hook = pythia.plugin.PluginHook.post_peerless_pixel_skip
+
+    context = pythia.plugin.run_plugin_functions(
+        hook,
+        plugins,
+        context=context,
+        args={"run": run, "config": config, "ctx": ctx},
+    ).get("context", context)
+
     return context
 
 
-def _generate_context_args(runs, peers, config):
+def _generate_context_args(runs, peers, config, plugins):
     for idx, run in enumerate(runs):
         for peer in peers[idx]:
-            yield run, peer, config
+            yield run, peer, config, plugins
 
 
 def symlink_wth_soil(output_dir, config, context):
@@ -69,6 +80,7 @@ def compose_peerless(context, config, env):
         f.write(xfile)
     return context["contextWorkDir"]
 
+
 def process_context(context, plugins, config, env):
     if context is not None:
         pythia.io.make_run_directory(context["contextWorkDir"])
@@ -78,9 +90,25 @@ def process_context(context, plugins, config, env):
             pythia.plugin.PluginHook.post_build_context,
             plugins,
             context=context,
-        )
-        return os.path.abspath(compose_peerless(context, config, env))
+        ).get("context", context)
+        compose_peerless_result = compose_peerless(context, config, env)
+        compose_peerless_result = pythia.plugin.run_plugin_functions(
+            pythia.plugin.PluginHook.post_compose_peerless_pixel_success,
+            plugins,
+            context=context,
+            compose_peerless_result=compose_peerless_result,
+            config=config,
+            env=env,
+        ).get("compose_peerless_result", compose_peerless_result)
+        return os.path.abspath(compose_peerless_result)
     else:
+        pythia.plugin.run_plugin_functions(
+            pythia.plugin.PluginHook.post_compose_peerless_pixel_skip,
+            plugins,
+            context=context,
+            config=config,
+            env=env,
+        )
         if not config["silence"]:
             print("X", end="", flush=True)
 
@@ -102,8 +130,8 @@ def execute(config, plugins):
     # Parallelize the context build (build_context), it is CPU intensive because it
     #  runs the functions (functions.py) declared in the config files.
     with concurrent.futures.ProcessPoolExecutor(max_workers=pool_size) as executor:
-        tasks = _generate_context_args(runs, peers, config)
-        future_to_context = {executor.submit(build_context, task): task for task in tasks}
+        tasks = _generate_context_args(runs, peers, config, plugins)
+        future_to_context = {executor.submit(build_context, *task): task for task in tasks}
 
         # process_context is mostly I/O intensive, no reason to parallelize it.
         for future in concurrent.futures.as_completed(future_to_context):
@@ -116,5 +144,11 @@ def execute(config, plugins):
     if config["exportRunlist"]:
         with open(os.path.join(config["workDir"], "run_list.txt"), "w") as f:
             [f.write(f"{x}\n") for x in runlist]
-    if not config["silence"]:
-        print()
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.post_compose_peerless_all,
+        plugins,
+        run_list=runlist,
+        config=config,
+        env=env,
+    )

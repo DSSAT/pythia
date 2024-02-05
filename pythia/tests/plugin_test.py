@@ -93,8 +93,8 @@ def test_plugin_auto_execution():
     context = {"context_value": 7}
     context1 = run_plugin_functions(
         PluginHook.post_build_context, plugins1, context=context
-    )
-    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1)
+    ).get("context")
+    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1).get("context", None)
     assert context1 != context
     assert context1["context_value"] == 8
     assert context2["context_value"] == 3
@@ -107,10 +107,10 @@ def test_no_plugin_does_not_change_context():
     context = {"hello": "there"}
     context1 = run_plugin_functions(
         PluginHook.post_build_context, plugins, context=context
-    )
+    ).get("context")
     assert context == context1
     context2 = run_plugin_functions(
         PluginHook.post_build_context, plugins1, context=context
-    )
+    ).get("context")
     assert context1 != context2
     assert context2 == {**context, **{"context_value": 3}}
