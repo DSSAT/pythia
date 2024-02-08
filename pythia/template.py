@@ -32,7 +32,7 @@ _t_formats = {
     "pfrst": {"length": 5},
     "plast": {"length": 5},
     "hdate": {"length": 5},
-    "ppop": {"fmt": ":>2.1f"},
+    "ppop": {"length": 5},
     "plrs": {"length": 3},
 }
 
