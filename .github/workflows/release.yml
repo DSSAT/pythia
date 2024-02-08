@@ -38,7 +38,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64 #,linux/arm64 future ;)
           push: true
-          tags: ${{ vars.DOCKER_IMAGE_NAME }}:${{ github.event.inputs.version }}, ${{ secrets.DOCKER_IMAGE_NAME }}:latest
+          tags: ${{ vars.DOCKER_IMAGE_NAME }}:${{ github.event.inputs.version }}, ${{ vars.DOCKER_IMAGE_NAME }}:latest
 
       - name: Push version bump commit
         run: |
