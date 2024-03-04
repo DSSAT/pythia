@@ -15,7 +15,7 @@ def test_register_with_invalid_hook():
 def test_register_with_invalid_fun():
     plugins = {}
     plugins1 = register_plugin_function(
-        PluginHook.analyze_file, "not a function", "", plugins
+        PluginHook.pre_analytics, "not a function", "", plugins
     )
     assert plugins1 == {}
 
@@ -23,7 +23,7 @@ def test_register_with_invalid_fun():
 def test_register_with_invalid_config():
     plugins = {}
     plugins1 = register_plugin_function(
-        PluginHook.post_analysis, sample_function, "", plugins
+        PluginHook.post_analytics, sample_function, "", plugins
     )
     assert plugins1 == {}
 
@@ -33,13 +33,13 @@ def test_register_twice():
     plugins1 = {}
     plugins2 = {}
     plugins1 = register_plugin_function(
-        PluginHook.analyze_file, sample_function, {}, plugins
+        PluginHook.pre_analytics, sample_function, {}, plugins
     )
     plugins2 = register_plugin_function(
-        PluginHook.analyze_file, sample_function, {"a": 1}, plugins1
+        PluginHook.pre_analytics, sample_function, {"a": 1}, plugins1
     )
     assert plugins1 == {
-        PluginHook.analyze_file: [{"fun": sample_function, "config": {}}]
+        PluginHook.pre_analytics: [{"fun": sample_function, "config": {}}]
     }
     assert plugins1 == plugins2
 

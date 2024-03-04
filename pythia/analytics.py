@@ -8,6 +8,7 @@ from rasterio.io import DatasetReader
 import pythia.analytic_functions
 import pythia.io
 import pythia.util
+import pythia.plugin
 from contextlib import _GeneratorContextManager
 
 
@@ -250,13 +251,21 @@ def collate_outputs(config, run):
 def execute(config, plugins):
     runs = config.get("runs", [])
     analytics_config = config.get("analytics_setup", None)
+
+    if not analytics_config or len(runs) == 0:
+        logging.warning("Skipping analytics: no configuration or runs found.")
+        return
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.pre_analytics,
+        plugins,
+        config=config,
+    )
+
     run_outputs = []
     calculated = None
     filtered = None
-    if not analytics_config:
-        return
-    if len(runs) == 0:
-        return
+
     for run in runs:
         run_outputs.append(collate_outputs(config, run))
     # Apply all the filters first
@@ -272,3 +281,12 @@ def execute(config, plugins):
         combine_outputs(config, filtered)
     else:
         final_outputs(config, filtered)
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.post_analytics,
+        plugins,
+        config=config,
+        run_outputs=run_outputs,
+        calculated=calculated,
+        filtered=filtered,
+    )
