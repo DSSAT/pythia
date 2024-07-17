@@ -9,6 +9,8 @@ import pythia.soil_handler
 import pythia.template
 import pythia.util
 
+warning_ic_enabled_triggered = False
+
 
 def extract_raster(s):
     args = s.split("::")
@@ -94,6 +96,14 @@ def lookup_wth(k, run, context, _):
 
 
 def generate_ic_layers(k, run, context, _):
+    global warning_ic_enabled_triggered
+
+    if not context.get("ic_enabled", False):
+        if not warning_ic_enabled_triggered:
+            logging.warning("Initial Conditions are not enabled for this run, but a soil layer was requested.")
+            warning_ic_enabled_triggered = True
+        return None
+
     args = run[k].split("::")[1:]
     if args[0].startswith("$"):
         profile = args[0][1:]

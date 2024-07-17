@@ -34,6 +34,7 @@ _t_formats = {
     "hdate": {"length": 5},
     "ppop": {"length": 5},
     "plrs": {"length": 3},
+    "ic_enabled": {"transform": int, "length": 2},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]

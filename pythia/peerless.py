@@ -9,12 +9,17 @@ import pythia.plugin
 import pythia.template
 import pythia.util
 
-
 def build_context(run, ctx, config, plugins):
     if not config["silence"]:
         print("+", end="", flush=True)
     context = run.copy()
     context = {**context, **ctx}
+
+    # Check if Initial Conditions properties are present. Add "ic_enabled" to the context accordingly
+    ic_enabled = "icsw%" in context and "icin" in context and "ic_layers" in context
+    context["ic_enabled"] = ic_enabled
+    run["ic_enabled"] = ic_enabled
+
     y, x = pythia.util.translate_coords_news(context["lat"], context["lng"])
     context["contextWorkDir"] = os.path.join(context["workDir"], y, x)
     for k, v in run.items():
@@ -22,7 +27,9 @@ def build_context(run, ctx, config, plugins):
             fn = v.split("::")[0]
             if fn != "raster":
                 res = getattr(pythia.functions, fn)(k, run, context, config)
-                if res is not None:
+                if fn == "generate_ic_layers" and res is None:
+                    del context[k]
+                elif res is not None:
                     context = {**context, **res}
                 else:
                     context = None
