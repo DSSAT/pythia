@@ -50,6 +50,8 @@ def init_engine(template_dir):
 def wrap_format(k, v):
     fmt = ""
     if k in _t_formats:
+        if "transform" in _t_formats[k]:
+            v = _t_formats[k]["transform"](v)
         if "raw" in _t_formats[k]:
             fmt = _t_formats[k]["raw"]
         elif "fmt" in _t_formats[k]:
