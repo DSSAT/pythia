@@ -82,21 +82,23 @@ Supported DSSAT variables
 The following are the supported DSSAT variables. To add more variables, please extend ``template.py``.
 
 +-------+---------+-------+-------+
-| cname | icbl    | pdate | sno3  |
+| cname | nyers   | pdate | irrig |
 +-------+---------+-------+-------+
-| erain | icren   | pfrst | wsta  |
+| erain | flhst   | pfrst | wsta  |
 +-------+---------+-------+-------+
-| famn  | icres   | ph2ol | xcrd  |
+| famn  | fhdur   | ph2ol | xcrd  |
 +-------+---------+-------+-------+
-| fdap  | icrt    | plast | ycrd  |
+| fdap  | sdate   | plast | ycrd  |
 +-------+---------+-------+-------+
-| fdate | id_soil | ramt  |       |
+| fdate | id_soil | ramt  | ingeno|
 +-------+---------+-------+-------+
-| fdate | ingeno  | sdate |       |
+| fdate | icbl    | sh2o  | snh4  |
 +-------+---------+-------+-------+
-| fhdur | irrig   | sh2o  |       |
+| sno3  | icrt    | icnr  | icrn  |
 +-------+---------+-------+-------+
-| flhst | nyers   | snh4  |       |
+| icre  | icwd    | icres | icren |
++-------+---------+-------+-------+
+| icrep | icrip   | icrid |       |
 +-------+---------+-------+-------+
 
 **Note:** All dates are ISO formatted as ``YYYY-MM-DD``
