@@ -102,8 +102,8 @@ def auto_format_dict(d):
     for k in _t_envmod_fields:
         clean[k] = envmod_format("A0")
     for k, v in d.items():
-        if v == "-99" or v == -99:
-            clean[k] = wrap_format(k, v)
+        if v == "-99" or v == -99 or v is None:
+            clean[k] = wrap_format(k, -99)
         else:
             if k in _t_date_fields and "::" not in v:
                 clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
