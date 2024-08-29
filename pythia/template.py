@@ -34,6 +34,12 @@ _t_formats = {
     "hdate": {"length": 5},
     "ppop": {"length": 5},
     "plrs": {"length": 3},
+
+    # Soil Analysis
+    "sadat": {"length": 5},
+    "smhb": {"length": 6},
+    "smpx": {"length": 6},
+    "smke": {"length": 6},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]

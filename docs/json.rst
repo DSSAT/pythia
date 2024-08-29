@@ -98,6 +98,8 @@ The following are the supported DSSAT variables. To add more variables, please e
 +-------+---------+-------+-------+
 | flhst | nyers   | snh4  |       |
 +-------+---------+-------+-------+
+| sadat | smhb    | smpx  | smke  |
++-------+---------+-------+-------+
 
 **Note:** All dates are ISO formatted as ``YYYY-MM-DD``
 
