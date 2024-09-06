@@ -10,13 +10,6 @@ _t_formats = {
     "id_soil": {"align": ":<", "length": 10},
     "xcrd": {"fmt": ":>15.3f"},
     "ycrd": {"fmt": ":>15.3f"},
-    "icrt": {"length": 6},
-    "icres": {"length": 6},
-    "icren": {"length": 6},
-    "icbl": {"length": 6},
-    "sh2o": {"fmt": ":>6.3f"},
-    "snh4": {"fmt": ":>6.2f"},
-    "sno3": {"fmt": ":>6.2f"},
     "fdate": {"length": 5},
     "fdap": {"length": 5},
     "famn": {"length": 5},
@@ -34,6 +27,24 @@ _t_formats = {
     "hdate": {"length": 5},
     "ppop": {"length": 5},
     "plrs": {"length": 3},
+
+    # Initial Conditions (Soil Profiles)
+    "icbl": {"length": 6},
+    "sh2o": {"fmt": ":>6.3f"},
+    "snh4": {"fmt": ":>6.2f"},
+    "sno3": {"fmt": ":>6.2f"},
+
+    # Initial Conditions (Residue)
+    "icrt": {"length": 6},
+    "icnd": {"length": 6},
+    "icrn": {"length": 6},
+    "icre": {"length": 6},
+    "icwd": {"length": 6},
+    "icres": {"length": 6},
+    "icren": {"length": 6},
+    "icrep": {"length": 6},
+    "icrip": {"length": 6},
+    "icrid": {"length": 6},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]
