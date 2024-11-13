@@ -84,7 +84,7 @@ def main():
                 config["silence"] = False
             if args.all or args.rescale:
                 print("Rescaling the input files")
-                pythia.rescale.execute(config, plugins)
+                config = pythia.rescale.execute(config, plugins)
             if args.all or args.setup:
                 print("Setting up points and directory structure")
                 pythia.peerless.execute(config, plugins)
