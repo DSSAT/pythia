@@ -24,7 +24,7 @@ def _run_dssat(details, config, plugins):
     out, err = dssat.communicate()
     # print("+", end="", flush=True)
 
-    error_count = len(out.decode().split("\n")) - 1
+    error_count = len(err.decode().split("\n")) - 1
     hook = pythia.plugin.PluginHook.post_run_pixel_success
     if error_count > 0:
         hook = pythia.plugin.PluginHook.post_run_pixel_failed
