@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 import datetime
 import logging
 

@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 import os
 
 import fiona
@@ -11,7 +13,6 @@ import pythia.util
 
 
 """rasterio reads x/y which is longitude/latitude"""
-
 
 def get_site_raster_value(dataset, band, site):
     lng, lat = site
