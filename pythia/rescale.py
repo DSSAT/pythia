@@ -303,5 +303,5 @@ def execute(config, plugins):
 
     alter_config(config, resolutions)
 
-    print(json.dumps(config, indent=4))
+    # print(json.dumps(config, indent=4))
     return config
