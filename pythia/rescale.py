@@ -167,20 +167,20 @@ def change_vector_resolution(file_path, scale_factor, config, current_res, dst_p
     return dst_path
 
 
-def get_desired_res(resolutions, desired='highest'):
+def get_desired_res(run, desired='highest'):
     desired = desired.lower()
     if desired not in ['highest', 'high', 'lowest', 'low']:
         raise ValueError('desired must be one of \"highest, high, lowest, low\"')
 
     target_res = [None, None]
     if desired in ['highest', "high"]:
-        for key, value in resolutions['runs'][0].items():
+        for key, value in run.items():
             if target_res[0] is None or abs(value[0]) < abs(target_res[0]):
                 target_res[0] = value[0]
             if target_res[1] is None or abs(value[1]) < abs(target_res[1]):
                 target_res[1] = value[1]
     elif desired in ['lowest', "low"]:
-        for key, value in resolutions['runs'][0].items():
+        for key, value in run.items():
             if target_res[0] is None or abs(value[0]) > abs(target_res[0]):
                 target_res[0] = value[0]
             if target_res[1] is None or abs(value[1]) > abs(target_res[1]):
@@ -189,11 +189,10 @@ def get_desired_res(resolutions, desired='highest'):
     return target_res
 
 
-def assign_scale_factors(target_res, resolutions):
-    for run in resolutions['runs']:
-        for value in run.values():
-            value.append(abs(round(value[0] / target_res[0], 1)))
-            value.append(abs(round(value[1] / target_res[1], 1)))
+def assign_scale_factors(target_res, run):
+    for value in run.values():
+        value.append(abs(round(value[0] / target_res[0], 1)))
+        value.append(abs(round(value[1] / target_res[1], 1)))
 
 
 def change_resolutions(config, resolutions):
@@ -230,7 +229,7 @@ def execute(config, plugins):
     # Create runs sub-dictionary with the same number of runs as the orginal
     resolutions = {"runs": [{key: None for key in run.keys()} for run in config['runs']]}
 
-    print(json.dumps(resolutions, indent=4))
+    # print(json.dumps(resolutions, indent=4))
 
     # Create a sub-dictionary for fertilizers since an arbitrary number of arguments may be used
     # Only add values if they start in $, this indicates it is an arg (may or may not be file)
@@ -256,6 +255,7 @@ def execute(config, plugins):
         i += 1
 
     to_delete = []
+    # Iterate through every run in the config file
     for i in range(len(config['runs'])):
         for key, value in config['runs'][i].items():
             if key in ["sites"]:
@@ -297,10 +297,9 @@ def execute(config, plugins):
         for i in range(len(config['runs'])):
             del resolutions['runs'][i][key]
 
-    assign_scale_factors(get_desired_res(resolutions, "highest"), resolutions)
+    for run in resolutions['runs']:
+        assign_scale_factors(get_desired_res(run, "highest"), run)
     change_resolutions(config, resolutions)
-
-    print(json.dumps(resolutions, indent=4))
 
     alter_config(config, resolutions)
 
