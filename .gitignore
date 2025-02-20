@@ -2,6 +2,7 @@
 tags
 data/*
 pythia/__pycache__/*
+pythia/.idea/*
 .idea/*
 .vscode/*
 *.pyc
