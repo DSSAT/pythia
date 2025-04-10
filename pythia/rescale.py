@@ -151,15 +151,9 @@ def change_vector_resolution(file_path, scale_factor, config, current_res, dst_p
                             new_geometry = fiona.Geometry((x_new, y_new), type='Point')
 
                             # TODO: find out how slimmed down we can get the properties (what is necessary)
-                            properties = {
-                                'ID': old_properties['ID'],
-                                'Latitude': old_properties['Latitude'],
-                                'Longitude': old_properties['Longitude'],
-                                'nasapid': old_properties['nasapid'],
-                                'LatNP': old_properties['LatNP'],
-                                'LonNP': old_properties['LonNP'],
-                            }
-
+                            properties = {}
+                            [properties.update({key: value}) for key, value in old_properties.items() if key != 'id']
+                            
                             new_properties = fiona.Properties.from_dict(properties)
 
                             dst.write(fiona.Feature(new_geometry, str(id), new_properties))
