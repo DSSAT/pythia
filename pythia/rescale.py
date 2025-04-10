@@ -46,7 +46,7 @@ def get_vector_resolution(file_path):
             return [round(min_x_dist, 6), round(min_y_dist, 6)]
 
 
-def change_raster_resolution(file_path, scale_factor, config, dst_path=None):
+def change_raster_resolution(file_path, scale_factor, config, dst_path=None, need_val_scaling=False):
     file_name = file_path.split('/')[-1].split('.')[0]
 
     with rasterio.open(file_path, 'r') as src:
@@ -87,15 +87,25 @@ def change_raster_resolution(file_path, scale_factor, config, dst_path=None):
 
         with rasterio.open(dst_path, 'w', **profile) as dst:
             for i in range(1, profile['count'] + 1):
+                src_array = src.read(i)
+
+                dst_array = rasterio.band(dst, i).read(1)
                 reproject(
-                    source=rasterio.band(src, i),
-                    destination=rasterio.band(dst, i),
-                    src_transform=profile['transform'],
-                    src_crs=profile['crs'],
+                    source=src_array,
+                    destination=dst_array,
+                    src_transform=src.transform,
+                    src_crs=src.crs,
                     dst_transform=transform,
-                    dst_crs=profile['crs'],
+                    dst_crs=src.crs,
                     resampling=resampling_mode
                 )
+
+                if need_val_scaling:
+                    area_scaling_factor = (1 / scale_factor) ** 2
+                    dst_array *= area_scaling_factor
+
+                dst.write(dst_array, i)
+
     return dst_path
 
 
@@ -197,7 +207,11 @@ def change_resolutions(config, resolutions):
                     updated_path = change_vector_resolution(value[3], int(value[4]), config, (value[0], value[1]))
                     value[3] = updated_path
                 elif value[2] == 'raster':
-                    updated_path = change_raster_resolution(value[3], value[4], config)
+                    # Hardcoded harvestArea rescaling of value.
+                    if key == "harvestArea":
+                        updated_path = change_raster_resolution(value[3], value[4], config)
+                    else:
+                        updated_path = change_raster_resolution(value[3], value[4], config)
                     value[3] = updated_path
 
 
