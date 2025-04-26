@@ -1,10 +1,12 @@
 import os
+import sys
 
 import fiona
 import numpy.ma as ma
 import rasterio
 from shapely.geometry import Point, MultiPoint
 from shapely.ops import nearest_points
+from pythia.gis import euclidean_distance
 
 import pythia.functions
 import pythia.util
@@ -101,26 +103,24 @@ def find_vector_coords(f, lng, lat, a):
 
 
 def find_closest_vector_coords(f, lng, lat, a):
-    coords = Point(lng, lat)
-    points = []
-    ids = []
+    closest_id = None
     with fiona.open(f, "r") as source:
+        closest_distance = sys.float_info.max
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":
-                points.extend(
-                    [Point(p[0], p[1]) for p in feature["geometry"]["coordinates"]]
-                )
-                ids.extend(
-                    [feature["properties"][a]] * len(feature["geometry"]["coordinates"])
-                )
+                for coords in feature["geometry"]["coordinates"]:
+                    res = euclidean_distance(coords[1], coords[0], lat, lng)
+                    if res < closest_distance:
+                        closest_distance = res
+                        closest_id = feature["properties"][a]
+                    if res == 0:
+                        break
             if feature["geometry"]["type"] == "Point":
-                points.append(
-                    Point(
-                        feature["geometry"]["coordinates"][0],
-                        feature["geometry"]["coordinates"][1],
-                    )
-                )
-                ids.append(feature["properties"][a])
-    mp = MultiPoint(points)
-    nearest = nearest_points(coords, mp)[1]
-    return ids[points.index(nearest)]
+                coords = feature["geometry"]["coordinates"]
+                res = euclidean_distance(coords[1], coords[0], lat, lng)
+                if res < closest_distance:
+                    closest_distance = res
+                    closest_id = feature["properties"][a]
+                if res == 0:
+                    return feature["properties"][a]
+    return closest_id
