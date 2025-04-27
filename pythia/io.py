@@ -4,6 +4,8 @@ import sys
 import fiona
 import numpy.ma as ma
 import rasterio
+from functools import cache
+from typing import Any, Dict, Tuple
 from pythia.gis import euclidean_distance
 
 import pythia.functions
@@ -77,6 +79,27 @@ def get_shp_profile(f):
     pass
 
 
+@cache
+def index_points_ids(file: str, id_field: str) -> Dict[Tuple[float, float], Any]:
+    """
+    Create a mapping of (lon, lat) coordinates to feature IDs from a GIS file.
+
+    :param file: Path to the GIS file (e.g., Shapefile, GeoJSON).
+    :param id_field: Property field name whose values are mapped to coordinates.
+    :returns: A dictionary with (longitude, latitude) keys and `id_field` values.
+    """
+    coords_map = {}
+    with fiona.open(file, "r") as source:
+        for feature in source:
+            if feature["geometry"]["type"] == "MultiPoint":
+                for coords in feature["geometry"]["coordinates"]:
+                    coords_map[(coords[0], coords[1])] = feature["properties"][id_field]
+            if feature["geometry"]["type"] == "Point":
+                coords = feature["geometry"]["coordinates"]
+                coords_map[(coords[0], coords[1])] = feature["properties"][id_field]
+    return coords_map
+
+
 def extract_vector_coords(f):
     points = []
     with fiona.open(f, "r") as source:
@@ -101,6 +124,10 @@ def find_vector_coords(f, lng, lat, a):
 
 
 def find_closest_vector_coords(f, lng, lat, a):
+    lookup = index_points_ids(f, a)[(lng, lat)]
+    if lookup is not None:
+        return lookup
+
     closest_id = None
     with fiona.open(f, "r") as source:
         closest_distance = sys.float_info.max
