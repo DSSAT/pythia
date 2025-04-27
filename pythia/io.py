@@ -4,8 +4,6 @@ import sys
 import fiona
 import numpy.ma as ma
 import rasterio
-from shapely.geometry import Point, MultiPoint
-from shapely.ops import nearest_points
 from pythia.gis import euclidean_distance
 
 import pythia.functions

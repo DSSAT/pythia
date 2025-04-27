@@ -11,7 +11,6 @@ Fiona = "^1.9"
 jinja2 = "^3.0"
 numpy = "^1.16"
 rasterio = "^1.0"
-shapely = "^1.6"
 rtree = "^0.8"
 
 [tool.poetry.dev-dependencies]
