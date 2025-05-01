@@ -15,12 +15,11 @@ def get_raster_resolution(file_path):
     with rasterio.open(file_path, 'r') as raster:
         return [round(raster.profile['transform'][0], 6), round(raster.profile['transform'][4], 6)]
 
-
 def get_vector_resolution(file_path):
     with fiona.open(file_path, 'r') as src:
         min_x_dist, min_y_dist = None, None
         if src[0]['geometry']['type'] == 'Polygon':
-            x_min, y_min, x_max, y_min = None, None
+            x_min, y_min, x_max, y_max = None, None, None, None
             for coords in src[0]['geometry']['coordinates']:
                 if x_min is None or coords[0] < x_min:
                     x_min = coords[0]
@@ -34,16 +33,22 @@ def get_vector_resolution(file_path):
             y_dist = y_max - y_min
             return (x_dist, y_dist)
         else:
-            for i in range(len(src) - 1):
-                x_dist = abs(src[i]['geometry']['coordinates'][0] - src[i + 1]['geometry']['coordinates'][0])
-                y_dist = abs(src[i]['geometry']['coordinates'][1] - src[i + 1]['geometry']['coordinates'][1])
-                if 0 < x_dist:
-                    if min_x_dist is None or x_dist < min_x_dist:
-                        min_x_dist = x_dist
-                if 0 < y_dist:
-                    if min_y_dist is None or y_dist < min_y_dist:
-                        min_y_dist = y_dist
-            return [round(min_x_dist, 6), round(min_y_dist, 6)]
+            points = [feature['geometry']['coordinates'] for feature in src]
+            for i in range(len(points) - 1):
+                x1, y1 = points[i]
+                x2, y2 = points[i + 1]
+                x_diff = abs(x2 - x1)
+                y_diff = abs(y2 - y1)
+                if x_diff > 0:
+                    if min_x_dist is None or x_diff < min_x_dist:
+                        min_x_dist = x_diff
+                if y_diff > 0:
+                    if min_y_dist is None or y_diff < min_y_dist:
+                        min_y_dist = y_diff
+            if (min_x_dist not in (None, 0)) and (min_y_dist not in (None, 0)): 
+                return [(min_x_dist), (min_y_dist)]
+            else:
+                return None, None
 
 
 def change_raster_resolution(file_path, scale_factor, config, dst_path=None, need_val_scaling=False):
@@ -107,6 +112,7 @@ def change_raster_resolution(file_path, scale_factor, config, dst_path=None, nee
                 dst.write(dst_array, i)
 
     return dst_path
+
 
 
 def change_vector_resolution(file_path, scale_factor, config, current_res, dst_path=None):
