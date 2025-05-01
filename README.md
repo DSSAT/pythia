@@ -61,12 +61,13 @@ To install and run DSSAT-Pythia on your PC, you will need the following software
    <full path to poetry>\poetry install
    <full path to poetry>\poetry build
    ```
-
+   - On Windows, poetry will be found in "C:\Users\username\AppData\Local\Programs\Python\Python38\Scripts"
+     
 8. Install the Pythia wheel file:
    - Navigate to the `dist` folder and install the `.whl` file:
      ```bash
      cd dist
-     pip install pythia-2.2.1-py3-none-any.whl
+     pip install pythia-2.3.0-py3-none-any.whl
      ```
    - **Note**: Check the version in the `dist` folder and adjust the command if necessary.
 

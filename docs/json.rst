@@ -100,6 +100,8 @@ The following are the supported DSSAT variables. To add more variables, please e
 +-------+---------+-------+-------+
 | icrep | icrip   | icrid |       |
 +-------+---------+-------+-------+
+| sadat | smhb    | smpx  | smke  |
++-------+---------+-------+-------+
 
 **Note:** All dates are ISO formatted as ``YYYY-MM-DD``
 
