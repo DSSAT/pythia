@@ -16,9 +16,12 @@ def get_raster_resolution(file_path):
         return [round(raster.profile['transform'][0], 6), round(raster.profile['transform'][4], 6)]
 
 
+# Decides that a vector file is desired
 def get_vector_resolution(file_path):
     with fiona.open(file_path, 'r') as src:
         min_x_dist, min_y_dist = None, None
+
+        # Check if the geometry is a polygon or points
         if src[0]['geometry']['type'] == 'Polygon':
             x_min, y_min, x_max, y_min = None, None
             for coords in src[0]['geometry']['coordinates']:
@@ -33,16 +36,21 @@ def get_vector_resolution(file_path):
             x_dist = x_max - x_min
             y_dist = y_max - y_min
             return (x_dist, y_dist)
+        
+        # Otherwise the file contains many separate points
         else:
             for i in range(len(src) - 1):
+                # Calculate the x and y distances between the two points
                 x_dist = abs(src[i]['geometry']['coordinates'][0] - src[i + 1]['geometry']['coordinates'][0])
                 y_dist = abs(src[i]['geometry']['coordinates'][1] - src[i + 1]['geometry']['coordinates'][1])
+                
+                # Record minimum & non-zero resolutions
                 if 0 < x_dist:
                     if min_x_dist is None or x_dist < min_x_dist:
                         min_x_dist = x_dist
                 if 0 < y_dist:
                     if min_y_dist is None or y_dist < min_y_dist:
-                        min_y_dist = y_dist
+                        min_y_dist = y_dist # <- 0,083333 is the desired value here
             return [round(min_x_dist, 6), round(min_y_dist, 6)]
 
 
