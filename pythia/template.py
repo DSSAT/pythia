@@ -47,6 +47,12 @@ _t_formats = {
     "icrep": {"length": 6},
     "icrip": {"length": 6},
     "icrid": {"length": 6},
+
+    # Soil Analysis
+    "sadat": {"length": 5},
+    "smhb": {"length": 6},
+    "smpx": {"length": 6},
+    "smke": {"length": 6},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]
