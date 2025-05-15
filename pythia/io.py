@@ -1,10 +1,12 @@
 import os
+import sys
 
 import fiona
 import numpy.ma as ma
 import rasterio
-from shapely.geometry import Point, MultiPoint
-from shapely.ops import nearest_points
+from functools import cache
+from typing import Any, Dict, Tuple
+from pythia.gis import euclidean_distance
 
 import pythia.functions
 import pythia.util
@@ -77,6 +79,27 @@ def get_shp_profile(f):
     pass
 
 
+@cache
+def index_points_ids(file: str, id_field: str) -> Dict[Tuple[float, float], Any]:
+    """
+    Create a mapping of (lon, lat) coordinates to feature IDs from a GIS file.
+
+    :param file: Path to the GIS file (e.g., Shapefile, GeoJSON).
+    :param id_field: Property field name whose values are mapped to coordinates.
+    :returns: A dictionary with (longitude, latitude) keys and `id_field` values.
+    """
+    coords_map = {}
+    with fiona.open(file, "r") as source:
+        for feature in source:
+            if feature["geometry"]["type"] == "MultiPoint":
+                for coords in feature["geometry"]["coordinates"]:
+                    coords_map[(coords[0], coords[1])] = feature["properties"][id_field]
+            if feature["geometry"]["type"] == "Point":
+                coords = feature["geometry"]["coordinates"]
+                coords_map[(coords[0], coords[1])] = feature["properties"][id_field]
+    return coords_map
+
+
 def extract_vector_coords(f):
     points = []
     with fiona.open(f, "r") as source:
@@ -101,26 +124,28 @@ def find_vector_coords(f, lng, lat, a):
 
 
 def find_closest_vector_coords(f, lng, lat, a):
-    coords = Point(lng, lat)
-    points = []
-    ids = []
+    lookup = index_points_ids(f, a)[(lng, lat)]
+    if lookup is not None:
+        return lookup
+
+    closest_id = None
     with fiona.open(f, "r") as source:
+        closest_distance = sys.float_info.max
         for feature in source:
             if feature["geometry"]["type"] == "MultiPoint":
-                points.extend(
-                    [Point(p[0], p[1]) for p in feature["geometry"]["coordinates"]]
-                )
-                ids.extend(
-                    [feature["properties"][a]] * len(feature["geometry"]["coordinates"])
-                )
+                for coords in feature["geometry"]["coordinates"]:
+                    res = euclidean_distance(coords[1], coords[0], lat, lng)
+                    if res < closest_distance:
+                        closest_distance = res
+                        closest_id = feature["properties"][a]
+                    if res == 0:
+                        break
             if feature["geometry"]["type"] == "Point":
-                points.append(
-                    Point(
-                        feature["geometry"]["coordinates"][0],
-                        feature["geometry"]["coordinates"][1],
-                    )
-                )
-                ids.append(feature["properties"][a])
-    mp = MultiPoint(points)
-    nearest = nearest_points(coords, mp)[1]
-    return ids[points.index(nearest)]
+                coords = feature["geometry"]["coordinates"]
+                res = euclidean_distance(coords[1], coords[0], lat, lng)
+                if res < closest_distance:
+                    closest_distance = res
+                    closest_id = feature["properties"][a]
+                if res == 0:
+                    return feature["properties"][a]
+    return closest_id
