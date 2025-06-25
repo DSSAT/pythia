@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 def findSoilProfile(profile, soilFiles):
     profile = "*{}".format(profile)
     for sf in soilFiles:

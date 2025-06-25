@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 import argparse
 import datetime
 import logging
@@ -8,6 +10,7 @@ import pythia.dssat
 import pythia.analytics
 import pythia.io
 import pythia.peerless
+import pythia.rescale
 import pythia.plugin
 
 
@@ -21,6 +24,9 @@ def main():
         "--export-runlist",
         action="store_true",
         help="Export a list of all the directories to be run",
+    )
+    parser.add_argument(
+        "--rescale", action="store_true", help="Rescale the input files"
     )
     parser.add_argument(
         "--setup", action="store_true", help="Setup DSSAT run structure and files"
@@ -78,6 +84,9 @@ def main():
                 config["silence"] = True
             else:
                 config["silence"] = False
+            if args.all or args.rescale:
+                print("Rescaling the input files")
+                config = pythia.rescale.execute(config, plugins)
             if args.all or args.setup:
                 print("Setting up points and directory structure")
                 pythia.peerless.execute(config, plugins)

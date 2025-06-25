@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 from jinja2 import Environment, FileSystemLoader
 import logging
 import pythia.functions

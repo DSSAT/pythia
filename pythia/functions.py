@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 import datetime
 
 import logging
@@ -187,6 +189,32 @@ def split_fert_dap_percent(k, run, context, _):
     out = []
     for i in range(len(daps)):
         app_total = total * percents[i]
+        app_dap = daps[i]
+        out.append({"fdap": app_dap, "famn": app_total})
+    return {k: out}
+
+
+def split_fert_dap_qty(k, run, context, _):
+    args = run[k].split("::")[1:]
+    split_amounts = args
+    for i,split_amount in enumerate(split_amounts):
+        if split_amount.startswith("$"):
+            search_context = split_amount[1:]
+            value = float(context[search_context])
+        else:
+            value = float(split_amount)
+        split_amounts[i]=value
+    daps = [int(i) for i in split_amounts[0::2]]
+    qty = [int(i) for i in split_amounts[1::2]]
+    if len(daps) != len(qty):
+        logging.error("Not enough arguments for split_applications_dap_qty")
+        return None
+    if len(daps) != len(set(daps)):
+        logging.error("Days should not be the same in split_applications_dap_percent")
+        return None
+    out = []
+    for i in range(len(daps)):
+        app_total = qty[i]
         app_dap = daps[i]
         out.append({"fdap": app_dap, "famn": app_total})
     return {k: out}

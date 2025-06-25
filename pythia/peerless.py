@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 import logging
 import multiprocessing as mp
 import concurrent.futures
