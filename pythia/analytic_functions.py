@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 def generate_funs(config):
     funcs = []
     for key, funs in config.items():

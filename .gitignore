@@ -15,3 +15,5 @@ docs/build
 dist
 *~
 .python-version
+.idea/
+pythia-data/

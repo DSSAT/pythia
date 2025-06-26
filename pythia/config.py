@@ -1,3 +1,5 @@
+__license__ = "BSD-3-Clause"
+
 import itertools
 import json
 import logging
