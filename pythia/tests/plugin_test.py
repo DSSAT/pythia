@@ -68,7 +68,7 @@ def test_load_plugin():
     plugins1 = load_plugins(config, plugins)
     assert PluginHook.post_config in plugins1
     assert plugins1[PluginHook.post_config] == [
-        {"fun": pythia.plugins.test_plugin.sample_function, "config": {}}
+        {"fun": pythia.plugins.test_plugin.sample_function, "config": config["plugins"][0]}
     ]
     assert plugins1 != {
         PluginHook.post_config: [{"fun": sample_function, "config": {}}]
@@ -82,7 +82,7 @@ def test_plugin_manual_execution():
     plugins1 = load_plugins(config, plugins)
 
     for plugin in plugins1[PluginHook.post_config]:
-        assert 1 == plugin["fun"]()
+        assert 1 == plugin["fun"](config={})["retval"]
 
 
 def test_plugin_auto_execution():

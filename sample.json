@@ -15,6 +15,12 @@
                 "end_date": "2018-04-30:",
                 "wsta": "SSUF"
             }
+        },
+        {
+            "plugin": "pest_infestation",
+            "params": {
+                "pest_infestation_severity": 0.2
+            }
         }
     ],
     "default_setup": {

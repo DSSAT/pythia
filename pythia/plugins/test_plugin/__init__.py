@@ -19,8 +19,9 @@ def sample_function(config={}, **kwargs):
     return {**kwargs, "config": config, "retval": retval}
 
 
-def contexted_function(context={}, **kwargs):
+def contexted_function(config, **kwargs):
     logging.info("[TEST PLUGIN] Running the contexted_function()")
+    context = kwargs.get("context", {})
     context["context_value"] = context.get("context_value", 2) + 1
     return {**kwargs, "context": context}
 
