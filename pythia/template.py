@@ -27,6 +27,7 @@ _t_formats = {
     "hdate": {"length": 5},
     "ppop": {"length": 5},
     "plrs": {"length": 3},
+    "odate": {"length": 5},
 
     # Initial Conditions (Soil Profiles)
     "icbl": {"length": 6},
@@ -45,6 +46,34 @@ _t_formats = {
     "icrep": {"length": 6},
     "icrip": {"length": 6},
     "icrid": {"length": 6},
+
+    # Replanting / Fertilizer management
+    "rdate": {"length": 5},
+    "rdap": {"length": 5},
+    "rcod": {"align": ":<", "length": 5},
+    "fmcd": {"align": ":<", "length": 5},
+    "facd": {"align": ":<", "length": 5},
+    "fdep": {"length": 5},
+    "famp": {"length": 5},
+    "famk": {"length": 5},
+    "famc": {"length": 5},
+    "famo": {"length": 5},
+    "focd": {"length": 5},
+    "fername": {"align": ":<", "length": 12},
+    "fdatein": {"length": 5}, # fertilization date inorganic
+
+    # Irrigation
+    "efir": {"length": 5},
+    "idep": {"length": 5},
+    "ithr": {"length": 5},
+    "iept": {"length": 5},
+    "ioff": {"length": 5},
+    "iame": {"length": 5},
+    "iamt": {"length": 5},
+    "irop": {"align": ":<", "length": 5},
+    "irval": {"length": 5},
+    "irname": {"align": ":<", "length": 12},
+    "idate": {"length": 5},
 
     # Soil Analysis
     "sadat": {"length": 5},
@@ -66,6 +95,8 @@ def init_engine(template_dir):
 
 def wrap_format(k, v):
     fmt = ""
+    if k == "fername":
+        return str(v).strip()
     if k in _t_formats:
         if "raw" in _t_formats[k]:
             fmt = _t_formats[k]["raw"]
