@@ -11,21 +11,56 @@ import pythia.util
 
 
 def extract_raster(s):
+    """
+    Extracts the raster filepath from a DSSAT-style lookup string. It scans for the
+    'raster' keyword and returns the element that follows it.
+
+    :param s: Lookup string containing the raster specification using '::' separators.
+    :returns: The raster filepath extracted from the lookup string.
+    :raises ValueError: If 'raster' is not found in the lookup string.
+    """
     args = s.split("::")
     raster_idx = args.index("raster")
     return args[raster_idx + 1]
 
 
 def xy_from_vector(v):
+    """
+    Extracts XY coordinates from a vector-based lookup string. This function parses
+    the lookup specification and delegates coordinate extraction to Pythia's I/O module.
+
+    :param v: Lookup string in the format 'xy_from_vector::<path_to_vector>'.
+    :returns: A list or array of XY coordinate pairs extracted from the vector file.
+    :raises IndexError: If the lookup string is malformed or missing components.
+    """
     args = v.split("::")
     return pythia.io.extract_vector_coords(args[1])
 
 
 def xy_from_list(lst):
+    """
+    Converts a list of coordinate-like sequences into (x, y) tuples. Coordinates are
+    reversed to match the expected ordering.
+
+    :param lst: Iterable containing coordinate pairs or sequences.
+    :returns: A list of (x, y) tuples with reversed coordinate order.
+    """
     return [tuple(x[::-1]) for x in lst]
 
 
 def auto_planting_window(k, run, context, _):
+    """
+    Computes an automatic planting window based on planting-date parameters encoded in
+    a lookup string. It replaces the raster-dependent field with contextual values and
+    derives the start and end dates accordingly.
+
+    :param k: Key identifying the planting configuration field in the run dictionary.
+    :param run: Dictionary containing run-level configuration values, including the lookup string.
+    :param context: Dictionary with resolved lookup values that replace raster-dependent entries.
+    :param _: Unused placeholder parameter kept for interface compatibility.
+    :returns: A dictionary with ISO-formatted planting dates (`pdate`, `pfrst`, `plast`).
+    :raises ValueError: If the lookup string is malformed or missing expected components.
+    """
     """multiple rasters not yet supported"""
     args = run[k].split("::")[1:]
     raster_idx = args.index("raster")
