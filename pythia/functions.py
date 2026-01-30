@@ -1,14 +1,15 @@
 import datetime
-
 import logging
 import os
+from pathlib import Path
+from typing import Optional
 
-from pythia.cache_manager import cache
+import rasterio
+
 import pythia.io
 import pythia.soil_handler
 import pythia.template
 import pythia.util
-
 
 def extract_raster(s):
     args = s.split("::")
@@ -108,52 +109,111 @@ def generate_ic_layers(k, run, context, _):
     return {k: [dict(zip(layer_labels, cl)) for cl in calculated_layers]}
 
 
-def build_ghr_cache(config):
-    import sqlite3
+def decode_prefix(prefix_code: int) -> str:
+    code = int(prefix_code)
 
-    with sqlite3.connect(os.path.join(config["ghr_root"], "GHR.db")) as conn:
-        ghr_profiles = {}
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM profile_map where profile != ''")
-        for row in cursor.fetchall():
-            ghr_profiles[row["id"]] = row["profile"]
+    if 0 <= code <= 9999:
+        s = f"{code:04d}"
+        a = int(s[:2])
+        b = int(s[2:])
+        if not (32 <= a <= 126 and 32 <= b <= 126):
+            raise ValueError("invalid 2-letter ascii pair")
+        return chr(a) + chr(b)
 
-        cache["ghr_profiles"] = ghr_profiles;
+    b0 = (code >> 24) & 0xFF
+    b1 = (code >> 16) & 0xFF
+    b2 = (code >> 8) & 0xFF
+    b3 = code & 0xFF
 
-    pass
+    for x in (b0, b1, b2, b3):
+        if not (32 <= x <= 126):
+            raise ValueError("invalid packed-ascii byte")
+
+    return bytes([b0, b1, b2, b3]).decode("ascii")
+
+
+def build_profile_code_from_bands(prefix_code: int, numeric_id: int) -> str:
+    prefix = decode_prefix(prefix_code)
+    n = int(numeric_id)
+
+    if len(prefix) == 2:
+        return f"{prefix}{n:08d}"
+    if len(prefix) == 4:
+        return f"{prefix}{n:06d}"
+
+    raise ValueError("invalid decoded prefix length")
+
+
+def get_profile_from_raster(lat: float, lon: float, raster_path: Path) -> Optional[str]:
+    if not raster_path.exists():
+        logging.error("Raster not found: %s", str(raster_path))
+        return None
+
+    with rasterio.open(str(raster_path)) as src:
+        try:
+            row, col = src.index(lon, lat)
+        except Exception:
+            logging.warning("Point (%s, %s) outside raster.", lat, lon)
+            return None
+
+        if src.count < 2:
+            logging.error("Raster '%s' must have 2 bands. Found %d.", str(raster_path), src.count)
+            return None
+
+        b1 = src.read(1)[row, col]
+        b2 = src.read(2)[row, col]
+
+        nodata = src.nodata if src.nodata is not None else 0
+
+        try:
+            b1i = int(b1)
+            b2i = int(b2)
+        except Exception:
+            logging.error("Non-integer band values at (%s, %s): b1=%s b2=%s", lat, lon, str(b1), str(b2))
+            return None
+
+        if b1i == int(nodata) and b2i == int(nodata):
+            return None
+
+        try:
+            return build_profile_code_from_bands(b1i, b2i)
+        except Exception:
+            logging.error("Failed to decode bands at (%s, %s): b1=%d b2=%d", lat, lon, b1i, b2i)
+            return None
 
 
 def lookup_ghr(k, run, context, config):
     args = run[k].split("::")[1:]
-    if "raster" in args:
-        logging.debug("lookup_ghr - context[%s] => %s", k, context[k])
-        if "ghr_profiles" not in cache:
-            build_ghr_cache(config)
-        tif_profile_id = int(float(str(context[k])))
-        if tif_profile_id not in cache["ghr_profiles"]:
-            logging.error(
-                "Invalid soil ID (%d) at (%f,%f)",
-                tif_profile_id,
-                context["lng"],
-                context["lat"],
-            )
-            return None
-        id_soil = cache["ghr_profiles"][tif_profile_id]
-        if id_soil and id_soil.strip() != "":
-            sol_file = "{}.SOL".format(id_soil[:2].upper())
-            return {
-                k: id_soil,
-                "soilFiles": [os.path.join(config["ghr_root"], sol_file)],
-            }
-        else:
-            logging.error(
-                "Soil NOT found for id: %s at (%f,%f)",
-                tif_profile_id,
-                context["lng"],
-                context["lat"],
-            )
-            return None
+    if "raster" not in args:
+        logging.error("lookup_ghr: Expected raster mode.")
+        return None
+
+    raster_idx = args.index("raster")
+    if raster_idx + 1 >= len(args):
+        logging.error("lookup_ghr: Missing raster path.")
+        return None
+
+    raster_path = Path(args[raster_idx + 1])
+
+    try:
+        lat = float(context["lat"])
+        lon = float(context["lng"])
+    except Exception:
+        logging.error("lookup_ghr: Invalid lat/lng in context.")
+        return None
+
+    profile_code = get_profile_from_raster(lat, lon, raster_path)
+    if not profile_code:
+        logging.error("lookup_ghr: No profile found for (%s, %s) in %s", lat, lon, str(raster_path))
+        return None
+
+    sol_prefix = profile_code[:2].upper()
+    sol_path = os.path.join(config["ghr_root"], f"{sol_prefix}.SOL")
+
+    return {
+        k: profile_code,
+        "soilFiles": [sol_path],
+    }
 
 
 def split_fert_dap_percent(k, run, context, _):
