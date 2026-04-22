@@ -57,7 +57,7 @@ def construct_pixel_forecast(config={}, context={}):
                 scraping_lines = False
                 break
 
-    with open(source_weather) as source, open(dest_weather, "w") as dest:
+    with open(source_weather) as source, open(dest_weather, "w", newline = '') as dest:
         in_target = False
         wrote_target = False
         for line in source:

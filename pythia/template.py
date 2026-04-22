@@ -10,13 +10,6 @@ _t_formats = {
     "id_soil": {"align": ":<", "length": 10},
     "xcrd": {"fmt": ":>15.3f"},
     "ycrd": {"fmt": ":>15.3f"},
-    "icrt": {"length": 6},
-    "icres": {"length": 6},
-    "icren": {"length": 6},
-    "icbl": {"length": 6},
-    "sh2o": {"fmt": ":>6.3f"},
-    "snh4": {"fmt": ":>6.2f"},
-    "sno3": {"fmt": ":>6.2f"},
     "fdate": {"length": 5},
     "fdap": {"length": 5},
     "famn": {"length": 5},
@@ -31,7 +24,62 @@ _t_formats = {
     "pdate": {"length": 5},
     "pfrst": {"length": 5},
     "plast": {"length": 5},
-    "hdate": {"length": 5}
+    "hdate": {"length": 5},
+    "ppop": {"length": 5},
+    "plrs": {"length": 3},
+    "odate": {"length": 5},
+
+    # Initial Conditions (Soil Profiles)
+    "icbl": {"length": 6},
+    "sh2o": {"fmt": ":>6.3f"},
+    "snh4": {"fmt": ":>6.2f"},
+    "sno3": {"fmt": ":>6.2f"},
+
+    # Initial Conditions (Residue)
+    "icrt": {"length": 6},
+    "icnd": {"length": 6},
+    "icrn": {"length": 6},
+    "icre": {"length": 6},
+    "icwd": {"length": 6},
+    "icres": {"length": 6},
+    "icren": {"length": 6},
+    "icrep": {"length": 6},
+    "icrip": {"length": 6},
+    "icrid": {"length": 6},
+
+    # Replanting / Fertilizer management
+    "rdate": {"length": 5},
+    "rdap": {"length": 5},
+    "rcod": {"align": ":<", "length": 5},
+    "fmcd": {"align": ":<", "length": 5},
+    "facd": {"align": ":<", "length": 5},
+    "fdep": {"length": 5},
+    "famp": {"length": 5},
+    "famk": {"length": 5},
+    "famc": {"length": 5},
+    "famo": {"length": 5},
+    "focd": {"length": 5},
+    "fername": {"align": ":<", "length": 12},
+    "fdatein": {"length": 5}, # fertilization date inorganic
+
+    # Irrigation
+    "efir": {"length": 5},
+    "idep": {"length": 5},
+    "ithr": {"length": 5},
+    "iept": {"length": 5},
+    "ioff": {"length": 5},
+    "iame": {"length": 5},
+    "iamt": {"length": 5},
+    "irop": {"align": ":<", "length": 5},
+    "irval": {"length": 5},
+    "irname": {"align": ":<", "length": 12},
+    "idate": {"length": 5},
+
+    # Soil Analysis
+    "sadat": {"length": 5},
+    "smhb": {"length": 6},
+    "smpx": {"length": 6},
+    "smke": {"length": 6},
 }
 
 _t_date_fields = ["sdate", "fdate", "pfrst", "plast", "pdate", "hdate"]
@@ -47,6 +95,8 @@ def init_engine(template_dir):
 
 def wrap_format(k, v):
     fmt = ""
+    if k == "fername":
+        return str(v).strip()
     if k in _t_formats:
         if "raw" in _t_formats[k]:
             fmt = _t_formats[k]["raw"]
@@ -87,7 +137,6 @@ def envmod_format(v):
     return "{}{:>4}".format(mod, val)
 
 
-
 def auto_format_dict(d):
     if isinstance(d, str):
         return d
@@ -101,23 +150,26 @@ def auto_format_dict(d):
     for k in _t_envmod_fields:
         clean[k] = envmod_format("A0")
     for k, v in d.items():
-        if k in _t_date_fields and "::" not in v:
-            clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
-        elif k in _t_date_fields_4 and "::" not in v:
-            clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
-        elif k in _t_envmod_fields:
-            clean[k] = envmod_format(v)
-        elif k in _t_formats:
+        if v == "-99" or v == -99:
             clean[k] = wrap_format(k, v)
-        elif isinstance(v, dict):
-            clean[k] = auto_format_dict(v)
-        elif isinstance(v, list) and not isinstance(v, str):
-            if k == "sites":
-                continue
-            else:
-                clean[k] = [auto_format_dict(intern) for intern in v]
         else:
-            clean[k] = v
+            if k in _t_date_fields and "::" not in v:
+                clean[k] = pythia.util.to_julian_date(pythia.util.from_iso_date(v))
+            elif k in _t_date_fields_4 and "::" not in v:
+                clean[k] = pythia.util.to_julian_date_4(pythia.util.from_iso_date(v))
+            elif k in _t_envmod_fields:
+                clean[k] = envmod_format(v)
+            elif k in _t_formats:
+                clean[k] = wrap_format(k, v)
+            elif isinstance(v, dict):
+                clean[k] = auto_format_dict(v)
+            elif isinstance(v, list) and not isinstance(v, str):
+                if k == "sites":
+                    continue
+                else:
+                    clean[k] = [auto_format_dict(intern) for intern in v]
+            else:
+                clean[k] = v
     return clean
 
 

@@ -15,7 +15,7 @@ def test_register_with_invalid_hook():
 def test_register_with_invalid_fun():
     plugins = {}
     plugins1 = register_plugin_function(
-        PluginHook.analyze_file, "not a function", "", plugins
+        PluginHook.pre_analytics, "not a function", "", plugins
     )
     assert plugins1 == {}
 
@@ -23,7 +23,7 @@ def test_register_with_invalid_fun():
 def test_register_with_invalid_config():
     plugins = {}
     plugins1 = register_plugin_function(
-        PluginHook.post_analysis, sample_function, "", plugins
+        PluginHook.post_analytics, sample_function, "", plugins
     )
     assert plugins1 == {}
 
@@ -33,13 +33,13 @@ def test_register_twice():
     plugins1 = {}
     plugins2 = {}
     plugins1 = register_plugin_function(
-        PluginHook.analyze_file, sample_function, {}, plugins
+        PluginHook.pre_analytics, sample_function, {}, plugins
     )
     plugins2 = register_plugin_function(
-        PluginHook.analyze_file, sample_function, {"a": 1}, plugins1
+        PluginHook.pre_analytics, sample_function, {"a": 1}, plugins1
     )
     assert plugins1 == {
-        PluginHook.analyze_file: [{"fun": sample_function, "config": {}}]
+        PluginHook.pre_analytics: [{"fun": sample_function, "config": {}}]
     }
     assert plugins1 == plugins2
 
@@ -93,8 +93,8 @@ def test_plugin_auto_execution():
     context = {"context_value": 7}
     context1 = run_plugin_functions(
         PluginHook.post_build_context, plugins1, context=context
-    )
-    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1)
+    ).get("context")
+    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1).get("context", None)
     assert context1 != context
     assert context1["context_value"] == 8
     assert context2["context_value"] == 3
@@ -107,10 +107,10 @@ def test_no_plugin_does_not_change_context():
     context = {"hello": "there"}
     context1 = run_plugin_functions(
         PluginHook.post_build_context, plugins, context=context
-    )
+    ).get("context")
     assert context == context1
     context2 = run_plugin_functions(
         PluginHook.post_build_context, plugins1, context=context
-    )
+    ).get("context")
     assert context1 != context2
     assert context2 == {**context, **{"context_value": 3}}

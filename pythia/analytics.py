@@ -8,6 +8,7 @@ from rasterio.io import DatasetReader
 import pythia.analytic_functions
 import pythia.io
 import pythia.util
+import pythia.plugin
 from contextlib import _GeneratorContextManager
 
 
@@ -54,7 +55,7 @@ def filter_columns(config, outputs):
         out_file = os.path.join(
             out_dir, "filtered_{}".format(os.path.basename(current_file))
         )
-        with open(current_file) as source, open(out_file, "w") as dest:
+        with open(current_file) as source, open(out_file, "w", newline = '') as dest:
             dssat_in = csv.reader(source)
             dssat_out = csv.writer(dest)
             try:
@@ -93,7 +94,7 @@ def calculate_columns(config, outputs):
         out_file = os.path.join(
             out_dir, "calculated_{}".format(os.path.basename(current_file))
         )
-        with open(current_file) as source, open(out_file, "w") as dest:
+        with open(current_file) as source, open(out_file, "w", newline = '') as dest:
             dssat_in = csv.reader(source)
             dssat_out = csv.writer(dest)
             num_cols = 0
@@ -199,7 +200,8 @@ def collate_outputs(config, run):
                 additional_headers = f"{additional_headers},POPULATION"
                 pop_tiff = pop_info.split("::")[1]
                 ds_pop = rasterio.open(pop_tiff)
-                band_pop = ds_pop.read(1)                
+                band_pop = ds_pop.read(1)
+                band_pop = ds_pop.read(1)
             for i, line in enumerate(source):
                 if i == 0:
                     if not collected_first_line:
@@ -249,13 +251,21 @@ def collate_outputs(config, run):
 def execute(config, plugins):
     runs = config.get("runs", [])
     analytics_config = config.get("analytics_setup", None)
+
+    if not analytics_config or len(runs) == 0:
+        logging.warning("Skipping analytics: no configuration or runs found.")
+        return
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.pre_analytics,
+        plugins,
+        config=config,
+    )
+
     run_outputs = []
     calculated = None
     filtered = None
-    if not analytics_config:
-        return
-    if len(runs) == 0:
-        return
+
     for run in runs:
         run_outputs.append(collate_outputs(config, run))
     # Apply all the filters first
@@ -271,3 +281,12 @@ def execute(config, plugins):
         combine_outputs(config, filtered)
     else:
         final_outputs(config, filtered)
+
+    pythia.plugin.run_plugin_functions(
+        pythia.plugin.PluginHook.post_analytics,
+        plugins,
+        config=config,
+        run_outputs=run_outputs,
+        calculated=calculated,
+        filtered=filtered,
+    )
