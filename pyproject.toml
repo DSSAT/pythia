@@ -6,12 +6,25 @@ authors = ["Christopher Villalobos <cvillalobos@ufl.edu>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-Fiona = "^1.9"
+python = ">=3.8,<4.0"
+
+numpy = [
+  {version = "^1.16", python = "<3.12"},
+  {version = "^2.4",  python = ">=3.12"}
+]
+
+Fiona = [
+  {version = "^1.9",  python = "<3.12"},
+  {version = "^1.10", python = ">=3.12"}
+]
+
+rasterio = [
+  {version = "^1.0",  python = "<3.12"},
+  {version = "^1.5",  python = ">=3.12"}
+]
+
 jinja2 = "^3.0"
-numpy = "^1.16"
-rasterio = "^1.0"
-rtree = "^0.8"
+rtree  = "^0.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.1"

@@ -4,10 +4,12 @@ import sys
 import fiona
 import numpy.ma as ma
 import rasterio
+
 try:
     from functools import cache
 except ImportError:
     from functools import lru_cache as cache
+
 from typing import Any, Dict, Tuple
 from pythia.gis import euclidean_distance
 
