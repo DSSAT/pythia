@@ -125,7 +125,6 @@ def execute(config, plugins):
     pool_size = config.get("threads", mp.cpu_count())
     print("RUNNING WITH POOL SIZE: {}".format(pool_size))
     env = pythia.template.init_engine(config["templateDir"])
-    pythia.functions.build_ghr_cache(config)
 
     # Parallelize the context build (build_context), it is CPU intensive because it
     #  runs the functions (functions.py) declared in the config files.
