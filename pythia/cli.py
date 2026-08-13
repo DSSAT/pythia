@@ -8,6 +8,7 @@ import tempfile
 import pythia.analytics
 import pythia.config
 import pythia.dssat
+import pythia.example_data
 import pythia.io
 import pythia.peerless
 import pythia.plugin
@@ -16,7 +17,9 @@ from pythia.custom_raster_creator import main as raster_main
 
 def _build_raster_cfg_from_cli(args) -> dict:
     if not args.raster_output:
-        raise ValueError("Missing --raster-output when using --create-raster --raster-input cli.")
+        raise ValueError(
+            "Missing --raster-output when using --create-raster --raster-input cli."
+        )
 
     # For now: .SOL-based CLI input
     if not args.raster_sol_path:
@@ -45,16 +48,33 @@ def main():
     parser = argparse.ArgumentParser(prog="pythia")
 
     # Positional arguments
-    parser.add_argument("config", nargs="?", default=None, help="JSON configuration file to run")
-
+    parser.add_argument(
+        "config", nargs="?", default=None, help="JSON configuration file to run"
+    )
 
     # General run flags
-    parser.add_argument("--all", action="store_true", help="Run all the steps in pythia")
-    parser.add_argument("--export-runlist", action="store_true", help="Export a list of all the directories to be run")
-    parser.add_argument("--setup", action="store_true", help="Setup DSSAT run structure and files")
-    parser.add_argument("--run-dssat", action="store_true", help="Run DSSAT over the run structure")
-    parser.add_argument("--analyze", action="store_true", help="Run the analysis for the DSSAT runs")
-    parser.add_argument("--clean-work-dir", action="store_true", help="Clean the work directory prior to run")
+    parser.add_argument(
+        "--all", action="store_true", help="Run all the steps in pythia"
+    )
+    parser.add_argument(
+        "--export-runlist",
+        action="store_true",
+        help="Export a list of all the directories to be run",
+    )
+    parser.add_argument(
+        "--setup", action="store_true", help="Setup DSSAT run structure and files"
+    )
+    parser.add_argument(
+        "--run-dssat", action="store_true", help="Run DSSAT over the run structure"
+    )
+    parser.add_argument(
+        "--analyze", action="store_true", help="Run the analysis for the DSSAT runs"
+    )
+    parser.add_argument(
+        "--clean-work-dir",
+        action="store_true",
+        help="Clean the work directory prior to run",
+    )
     parser.add_argument(
         "--logfile-prefix",
         default="pythia",
@@ -62,9 +82,28 @@ def main():
     )
     parser.add_argument("--quiet", action="store_true", help="Enjoy the silence")
 
+    example_group = parser.add_mutually_exclusive_group()
+    example_group.add_argument(
+        "--configure-example",
+        metavar="SIMULATION_DATA",
+        help="Configure the downloadable Sri Lanka example-data directory",
+    )
+    example_group.add_argument(
+        "--validate-example",
+        metavar="SIMULATION_DATA",
+        help="Validate a configured Sri Lanka example-data directory",
+    )
+    parser.add_argument(
+        "--dssat-executable",
+        help="DSSAT executable used with --configure-example",
+    )
 
     # Raster creation mode
-    parser.add_argument("--create-raster", action="store_true", help="Create or update a soil raster GeoTIFF")
+    parser.add_argument(
+        "--create-raster",
+        action="store_true",
+        help="Create or update a soil raster GeoTIFF",
+    )
 
     parser.add_argument(
         "--raster-input",
@@ -78,31 +117,68 @@ def main():
         help="Path to raster build JSON config (used when --create-raster --raster-input json).",
     )
 
-    parser.add_argument("--raster-output", help="Output GeoTIFF path (used when --create-raster --raster-input cli).")
+    parser.add_argument(
+        "--raster-output",
+        help="Output GeoTIFF path (used when --create-raster --raster-input cli).",
+    )
     parser.add_argument(
         "--raster-sol-path",
         action="append",
         default=[],
         help="Path to a .SOL file or a directory containing .SOL files. Repeatable.",
     )
-    parser.add_argument("--raster-base", help="Optional base raster (.tif) to update instead of creating a new one.")
+    parser.add_argument(
+        "--raster-base",
+        help="Optional base raster (.tif) to update instead of creating a new one.",
+    )
 
     rec_group = parser.add_mutually_exclusive_group()
-    rec_group.add_argument("--raster-recursive", dest="raster_recursive", action="store_true")
-    rec_group.add_argument("--raster-no-recursive", dest="raster_recursive", action="store_false")
+    rec_group.add_argument(
+        "--raster-recursive", dest="raster_recursive", action="store_true"
+    )
+    rec_group.add_argument(
+        "--raster-no-recursive", dest="raster_recursive", action="store_false"
+    )
     parser.set_defaults(raster_recursive=False)
 
     args = parser.parse_args()
 
-    
+    if args.configure_example:
+        if not args.dssat_executable:
+            parser.error("--dssat-executable is required with --configure-example.")
+        try:
+            configured = pythia.example_data.configure_example_data(
+                args.configure_example, args.dssat_executable
+            )
+        except pythia.example_data.ExampleDataError as exc:
+            parser.error(str(exc))
+        print("Configured and validated example files:")
+        for path in configured:
+            print(f"  {path}")
+        return
+
+    if args.validate_example:
+        try:
+            validated = pythia.example_data.validate_example_data(args.validate_example)
+        except pythia.example_data.ExampleDataError as exc:
+            parser.error(str(exc))
+        print("Example data is valid:")
+        for path in validated:
+            print(f"  {path}")
+        return
+
     # Raster creation workflow
     if args.create_raster:
         if not args.raster_input:
-            parser.error("--raster-input is required when using --create-raster (choose: json or cli).")
+            parser.error(
+                "--raster-input is required when using --create-raster (choose: json or cli)."
+            )
 
         if args.raster_input == "json":
             if not args.raster_config:
-                parser.error("Missing --raster-config when using --create-raster --raster-input json.")
+                parser.error(
+                    "Missing --raster-config when using --create-raster --raster-input json."
+                )
             raster_main(args.raster_config, None)
             return
 
@@ -128,7 +204,6 @@ def main():
 
         parser.error("Invalid --raster-input value.")
         return
-
 
     # Normal Pythia run workflow
     if not args.config:
@@ -157,6 +232,7 @@ def main():
         print("Cleaning the work directory")
         if os.path.exists(config["workDir"]):
             import shutil
+
             shutil.rmtree(config["workDir"])
 
     config["exportRunlist"] = args.export_runlist
@@ -183,4 +259,3 @@ def main():
         "Pythia completed: %s",
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
-    

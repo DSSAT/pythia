@@ -4,54 +4,85 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New version'
+        description: New semantic version (for example, 2.3.1)
         required: true
 
-jobs:
-  update-and-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
+permissions:
+  contents: write
 
-      - name: Update pyproject.toml version
+jobs:
+  update-build-and-release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version
+        shell: bash
         run: |
-          sed -i "s/^version = .*/version = \"${{ github.event.inputs.version }}\"/" pyproject.toml
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git commit -am "ci: Version bump ${{ github.event.inputs.version }}"
-          git push
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must use MAJOR.MINOR.PATCH without a prefix."
+            exit 1
+          fi
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Git tag $VERSION already exists."
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: python -m pip install "poetry>=1.8,<3"
+
+      - name: Set version, install, test, and build
+        run: |
+          poetry version "$VERSION"
+          poetry install --no-interaction
+          poetry run pytest
+          poetry build
+
+      - name: Commit and tag the version
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add pyproject.toml
+          git commit -m "chore: release $VERSION"
+          git tag "$VERSION"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "$VERSION"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build and push Docker Image
-        uses: docker/build-push-action@v2
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64 #,linux/arm64 future ;)
+          platforms: linux/amd64
           push: true
-          tags: ${{ vars.DOCKER_IMAGE_NAME }}:${{ github.event.inputs.version }}, ${{ vars.DOCKER_IMAGE_NAME }}:latest
+          tags: |
+            ${{ vars.DOCKER_IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ vars.DOCKER_IMAGE_NAME }}:latest
 
-      - name: Push version bump commit
-        run: |
-          git tag ${{ github.event.inputs.version }}
-          git push origin ${{ github.event.inputs.version }}
-          git push
-
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
+      - name: Create GitHub release and upload Python artifacts
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.event.inputs.version }}
-          release_name: Release ${{ github.event.inputs.version }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$VERSION" dist/* \
+            --title "Release $VERSION" \
+            --generate-notes \
+            --verify-tag

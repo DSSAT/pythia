@@ -102,10 +102,12 @@ def run_plugin_functions(hook, plugins, **kwargs):
     _return = {**kwargs}
     if hook in plugins:
         for plugin_fun in plugins[hook]:
-            plugin_fun_return = plugin_fun["fun"](plugin_fun.get("config", {}), _return, **kwargs)
+            plugin_fun_return = plugin_fun["fun"](
+                plugin_fun.get("config", {}), **_return
+            )
             _return = {
                 **_return,
-                **({} if plugin_fun_return is None else plugin_fun_return)
+                **({} if plugin_fun_return is None else plugin_fun_return),
             }
 
     return _return

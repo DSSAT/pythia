@@ -1,0 +1,32 @@
+name: Soil raster compatibility
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  regression-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.8", "3.12"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        run: python -m pip install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Test one-band and two-band soil rasters
+        run: poetry run pytest -q pythia/tests/raster_functions_test.py
