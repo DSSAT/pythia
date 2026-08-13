@@ -3,4 +3,6 @@
    :caption: Pythia Documentation
 
    about
+   understanding_pythia
    json
+   soil_rasters

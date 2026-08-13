@@ -45,7 +45,11 @@ sample
 
 ghr_root
    :Type: directory string
-   :Description: The location of the eGHR (ehanced Global High Resolution) soils data.
+   :Description: The location of the eGHR (enhanced Global High Resolution)
+      soils data. For a legacy one-band soil raster, this directory must
+      contain ``GHR.db`` and the referenced ``.SOL`` files. For a two-band
+      encoded raster, ``GHR.db`` is not required, but the ``.SOL`` files are.
+      See :doc:`soil_rasters`.
 
 Default Setup (default_setup)
 -----------------------------

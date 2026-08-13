@@ -1,15 +1,23 @@
 import datetime
 import logging
-import os
+import math
+import sqlite3
+from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional, Tuple
 
+import numpy as np
 import rasterio
+from rasterio.crs import CRS
+from rasterio.errors import RasterioIOError
+from rasterio.warp import transform as transform_coordinates
+from rasterio.windows import Window
 
 import pythia.io
 import pythia.soil_handler
 import pythia.template
 import pythia.util
+
 
 def extract_raster(s):
     """
@@ -77,6 +85,7 @@ def auto_planting_window(k, run, context, _):
         "plast": pythia.util.to_iso_date(last),
     }
 
+
 def auto_planting_window_doy(k, run, context, _):
     """multiple rasters not yet supported"""
     args = run[k].split("::")[1:]
@@ -93,6 +102,7 @@ def auto_planting_window_doy(k, run, context, _):
         "plast": pythia.util.to_iso_date(last),
     }
 
+
 def auto_planting_window_doy_shape(k, run, context, _):
     """multiple rasters not yet supported"""
     args = run[k].split("::")[1:]
@@ -102,7 +112,7 @@ def auto_planting_window_doy_shape(k, run, context, _):
         idx = args.index("vector")
         cell_doy = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
 
-    first = datetime.datetime(run["startYear"], 1, 1) + datetime.timedelta(int(cell_doy) + int(args[idx + 3]) )
+    first = datetime.datetime(run["startYear"], 1, 1) + datetime.timedelta(int(cell_doy) + int(args[idx + 3]))
     td = datetime.timedelta(days=int(args[idx + 4]))
     last = first + td
     return {
@@ -110,6 +120,7 @@ def auto_planting_window_doy_shape(k, run, context, _):
         "pfrst": pythia.util.to_iso_date(first),
         "plast": pythia.util.to_iso_date(last),
     }
+
 
 def lookup_hc27(k, run, context, _):
     args = run[k].split("::")[1:]
@@ -126,7 +137,7 @@ def lookup_wth(k, run, context, _):
     if "vector" in args:
         idx = args.index("vector")
         cell_id = finder(args[idx + 1], context["lng"], context["lat"], args[idx + 2])
-    return {k: args[0], "wthFile": "{}.WTH".format(int(cell_id))}
+    return {k: args[0], "wthFile": "{}.WTH".format(cell_id)}
 
 
 def generate_ic_layers(k, run, context, _):
@@ -153,7 +164,10 @@ def decode_prefix(prefix_code: int) -> str:
         b = int(s[2:])
         if not (32 <= a <= 126 and 32 <= b <= 126):
             raise ValueError("invalid 2-letter ascii pair")
-        return chr(a) + chr(b)
+        prefix = chr(a) + chr(b)
+        if not prefix.isalpha():
+            raise ValueError("invalid 2-letter ascii prefix")
+        return prefix
 
     b0 = (code >> 24) & 0xFF
     b1 = (code >> 16) & 0xFF
@@ -164,7 +178,10 @@ def decode_prefix(prefix_code: int) -> str:
         if not (32 <= x <= 126):
             raise ValueError("invalid packed-ascii byte")
 
-    return bytes([b0, b1, b2, b3]).decode("ascii")
+    prefix = bytes([b0, b1, b2, b3]).decode("ascii")
+    if not prefix.isalpha():
+        raise ValueError("invalid 4-letter ascii prefix")
+    return prefix
 
 
 def build_profile_code_from_bands(prefix_code: int, numeric_id: int) -> str:
@@ -172,49 +189,300 @@ def build_profile_code_from_bands(prefix_code: int, numeric_id: int) -> str:
     n = int(numeric_id)
 
     if len(prefix) == 2:
+        if n < 0 or n > 99999999:
+            raise ValueError("numeric ID does not fit the 2-letter profile format")
         return f"{prefix}{n:08d}"
     if len(prefix) == 4:
+        if n < 0 or n > 999999:
+            raise ValueError("numeric ID does not fit the 4-letter profile format")
         return f"{prefix}{n:06d}"
 
     raise ValueError("invalid decoded prefix length")
 
 
-def get_profile_from_raster(lat: float, lon: float, raster_path: Path) -> Optional[str]:
-    if not raster_path.exists():
-        logging.error("Raster not found: %s", str(raster_path))
+def _point_to_raster_pixel(src, lat: float, lon: float) -> Optional[Tuple[int, int]]:
+    """Return a checked raster pixel for a WGS84 latitude/longitude pair."""
+    x = float(lon)
+    y = float(lat)
+
+    if not math.isfinite(x) or not math.isfinite(y):
+        logging.error("Invalid non-finite coordinates: (%s, %s).", lat, lon)
         return None
 
-    with rasterio.open(str(raster_path)) as src:
-        try:
-            row, col = src.index(lon, lat)
-        except Exception:
-            logging.warning("Point (%s, %s) outside raster.", lat, lon)
-            return None
+    try:
+        if src.crs is not None and src.crs != CRS.from_epsg(4326):
+            xs, ys = transform_coordinates(CRS.from_epsg(4326), src.crs, [x], [y])
+            x, y = xs[0], ys[0]
+    except Exception as exc:
+        logging.error(
+            "Could not transform point (%s, %s) to raster CRS %s: %s",
+            lat,
+            lon,
+            src.crs,
+            exc,
+        )
+        return None
 
-        if src.count < 2:
-            logging.error("Raster '%s' must have 2 bands. Found %d.", str(raster_path), src.count)
-            return None
+    bounds = src.bounds
+    if not (bounds.left <= x <= bounds.right and bounds.bottom <= y <= bounds.top):
+        logging.warning("Point (%s, %s) is outside raster '%s'.", lat, lon, src.name)
+        return None
 
-        b1 = src.read(1)[row, col]
-        b2 = src.read(2)[row, col]
+    try:
+        row, col = src.index(x, y)
+    except Exception as exc:
+        logging.warning(
+            "Could not locate point (%s, %s) in raster '%s': %s",
+            lat,
+            lon,
+            src.name,
+            exc,
+        )
+        return None
 
-        nodata = src.nodata if src.nodata is not None else 0
+    if row < 0 or row >= src.height or col < 0 or col >= src.width:
+        logging.warning("Point (%s, %s) is outside raster '%s'.", lat, lon, src.name)
+        return None
+    return row, col
 
-        try:
-            b1i = int(b1)
-            b2i = int(b2)
-        except Exception:
-            logging.error("Non-integer band values at (%s, %s): b1=%s b2=%s", lat, lon, str(b1), str(b2))
-            return None
 
-        if b1i == int(nodata) and b2i == int(nodata):
-            return None
+def _integer_band_value(value, band: int, lat: float, lon: float) -> Optional[int]:
+    if np.ma.is_masked(value):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        logging.error(
+            "Invalid value in soil raster band %d at (%s, %s): %r.",
+            band,
+            lat,
+            lon,
+            value,
+        )
+        return None
+    if not math.isfinite(number) or not number.is_integer():
+        logging.error(
+            "Soil raster band %d must contain integer values at (%s, %s); found %r.",
+            band,
+            lat,
+            lon,
+            value,
+        )
+        return None
+    return int(number)
 
-        try:
-            return build_profile_code_from_bands(b1i, b2i)
-        except Exception:
-            logging.error("Failed to decode bands at (%s, %s): b1=%d b2=%d", lat, lon, b1i, b2i)
-            return None
+
+def _get_profile_from_dataset(src, lat: float, lon: float) -> Optional[str]:
+    if src.count != 2:
+        logging.error(
+            "Encoded soil raster '%s' must have exactly 2 bands. Found %d.",
+            src.name,
+            src.count,
+        )
+        return None
+
+    pixel = _point_to_raster_pixel(src, lat, lon)
+    if pixel is None:
+        return None
+    row, col = pixel
+
+    try:
+        values = src.read(
+            indexes=(1, 2),
+            window=Window(col, row, 1, 1),
+            masked=True,
+        )
+    except Exception as exc:
+        logging.error(
+            "Could not read soil raster '%s' at (%s, %s): %s",
+            src.name,
+            lat,
+            lon,
+            exc,
+        )
+        return None
+
+    b1 = _integer_band_value(values[0, 0, 0], 1, lat, lon)
+    b2 = _integer_band_value(values[1, 0, 0], 2, lat, lon)
+    if b1 is None and b2 is None:
+        return None
+    if b1 is None or b2 is None:
+        logging.error(
+            "Incomplete encoded soil profile at (%s, %s) in '%s'.",
+            lat,
+            lon,
+            src.name,
+        )
+        return None
+
+    try:
+        return build_profile_code_from_bands(b1, b2)
+    except (TypeError, ValueError, OverflowError) as exc:
+        logging.error(
+            "Failed to decode soil raster bands at (%s, %s): b1=%d b2=%d (%s).",
+            lat,
+            lon,
+            b1,
+            b2,
+            exc,
+        )
+        return None
+
+
+def get_profile_from_raster(lat: float, lon: float, raster_path: Path) -> Optional[str]:
+    """Resolve a profile from a two-band encoded soil raster."""
+    raster_path = Path(raster_path)
+    if not raster_path.exists():
+        logging.error("Soil raster not found: %s", str(raster_path))
+        return None
+
+    try:
+        with rasterio.open(str(raster_path)) as src:
+            return _get_profile_from_dataset(src, lat, lon)
+    except (OSError, RasterioIOError) as exc:
+        logging.error("Could not open soil raster '%s': %s", raster_path, exc)
+        return None
+
+
+@lru_cache(maxsize=8)
+def _load_ghr_profiles_cached(db_path: str, modified_ns: int) -> Dict[int, str]:
+    """Load the legacy profile map; ``modified_ns`` invalidates stale cache entries."""
+    del modified_ns
+    profiles = {}
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT id, profile FROM profile_map "
+            "WHERE profile IS NOT NULL AND TRIM(profile) != ''"
+        )
+        for soil_id, profile in cursor.fetchall():
+            profiles[int(soil_id)] = str(profile).strip()
+    return profiles
+
+
+def _ghr_database_path(config) -> Path:
+    ghr_root = config.get("ghr_root") if config else None
+    if not ghr_root:
+        raise ValueError("Missing 'ghr_root' in the Pythia configuration.")
+
+    db_path = Path(ghr_root) / "GHR.db"
+    if not db_path.is_file():
+        raise FileNotFoundError(
+            "Legacy one-band soil raster detected, but GHR.db was not found "
+            f"under ghr_root: {ghr_root}"
+        )
+    return db_path.resolve()
+
+
+def build_ghr_cache(config) -> Dict[int, str]:
+    """Load the complete legacy profile map for API compatibility.
+
+    Runtime lookups query and cache individual IDs to avoid copying the full GHR
+    database into every worker process, especially on Windows.
+    """
+    resolved = _ghr_database_path(config)
+    return _load_ghr_profiles_cached(str(resolved), resolved.stat().st_mtime_ns)
+
+
+@lru_cache(maxsize=32768)
+def _lookup_ghr_profile_cached(
+    db_path: str, modified_ns: int, soil_id: int
+) -> Optional[str]:
+    del modified_ns
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT profile FROM profile_map "
+            "WHERE id = ? AND profile IS NOT NULL AND TRIM(profile) != ''",
+            (soil_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    return str(row[0]).strip()
+
+
+def _lookup_ghr_profile(config, soil_id: int) -> Optional[str]:
+    resolved = _ghr_database_path(config)
+    return _lookup_ghr_profile_cached(
+        str(resolved), resolved.stat().st_mtime_ns, soil_id
+    )
+
+
+def _legacy_profile_from_context(k, context, config) -> Optional[str]:
+    if k not in context:
+        logging.error(
+            "Legacy one-band soil raster requires the raster value in context[%r].",
+            k,
+        )
+        return None
+
+    try:
+        value = float(str(context[k]))
+        if not math.isfinite(value) or not value.is_integer():
+            raise ValueError
+        soil_id = int(value)
+    except (TypeError, ValueError, OverflowError):
+        logging.error("Invalid legacy soil ID in context[%r]: %r.", k, context[k])
+        return None
+
+    try:
+        profile = _lookup_ghr_profile(config, soil_id)
+    except (FileNotFoundError, OSError, ValueError, sqlite3.DatabaseError) as exc:
+        logging.error("Could not load the legacy GHR soil mapping: %s", exc)
+        return None
+
+    if not profile:
+        logging.error(
+            "Legacy soil ID %d at (%s, %s) was not found in GHR.db.",
+            soil_id,
+            context.get("lat"),
+            context.get("lng"),
+        )
+        return None
+    return profile
+
+
+@lru_cache(maxsize=256)
+def _soil_profiles_in_file(path: str, modified_ns: int):
+    del modified_ns
+    profiles = set()
+    with open(path, "r", encoding="utf-8", errors="ignore") as soil_file:
+        for line in soil_file:
+            if line.startswith("*"):
+                profile = line[1:].strip().split(maxsplit=1)
+                if profile:
+                    profiles.add(profile[0].upper())
+    return profiles
+
+
+def _soil_file_for_profile(profile_code: str, config) -> Optional[Path]:
+    ghr_root = config.get("ghr_root") if config else None
+    if not ghr_root:
+        logging.error("Missing 'ghr_root' in the Pythia configuration.")
+        return None
+
+    soil_path = Path(ghr_root) / f"{profile_code[:2].upper()}.SOL"
+    if not soil_path.is_file():
+        logging.error(
+            "Soil profile %s resolved successfully, but its DSSAT soil file was not found: %s",
+            profile_code,
+            soil_path,
+        )
+        return None
+    try:
+        resolved = soil_path.resolve()
+        profiles = _soil_profiles_in_file(
+            str(resolved), resolved.stat().st_mtime_ns
+        )
+    except OSError as exc:
+        logging.error("Could not read DSSAT soil file '%s': %s", soil_path, exc)
+        return None
+    if profile_code.upper() not in profiles:
+        logging.error(
+            "Soil profile %s was not found inside DSSAT soil file: %s",
+            profile_code,
+            soil_path,
+        )
+        return None
+    return soil_path
 
 
 def lookup_ghr(k, run, context, config):
@@ -229,6 +497,9 @@ def lookup_ghr(k, run, context, config):
         return None
 
     raster_path = Path(args[raster_idx + 1])
+    if not raster_path.is_file():
+        logging.error("Soil raster not found: %s", raster_path)
+        return None
 
     try:
         lat = float(context["lat"])
@@ -237,17 +508,43 @@ def lookup_ghr(k, run, context, config):
         logging.error("lookup_ghr: Invalid lat/lng in context.")
         return None
 
-    profile_code = get_profile_from_raster(lat, lon, raster_path)
-    if not profile_code:
-        logging.error("lookup_ghr: No profile found for (%s, %s) in %s", lat, lon, str(raster_path))
+    try:
+        with rasterio.open(str(raster_path)) as src:
+            if src.count == 1:
+                logging.debug("Using legacy one-band GHR soil lookup for %s.", raster_path)
+                if _point_to_raster_pixel(src, lat, lon) is None:
+                    return None
+                profile_code = _legacy_profile_from_context(k, context, config)
+            elif src.count == 2:
+                logging.debug("Using two-band encoded soil lookup for %s.", raster_path)
+                profile_code = _get_profile_from_dataset(src, lat, lon)
+            else:
+                logging.error(
+                    "Unsupported soil raster '%s': expected 1 legacy band or 2 encoded bands; found %d.",
+                    raster_path,
+                    src.count,
+                )
+                return None
+    except (OSError, RasterioIOError) as exc:
+        logging.error("Could not open soil raster '%s': %s", raster_path, exc)
         return None
 
-    sol_prefix = profile_code[:2].upper()
-    sol_path = os.path.join(config["ghr_root"], f"{sol_prefix}.SOL")
+    if not profile_code:
+        logging.error(
+            "lookup_ghr: No profile found for (%s, %s) in %s",
+            lat,
+            lon,
+            str(raster_path),
+        )
+        return None
+
+    sol_path = _soil_file_for_profile(profile_code, config)
+    if sol_path is None:
+        return None
 
     return {
         k: profile_code,
-        "soilFiles": [sol_path],
+        "soilFiles": [str(sol_path)],
     }
 
 
@@ -290,7 +587,7 @@ def split_fert_dap_percent(k, run, context, _):
 def assign_by_raster_value(k, run, context, _):
     init_args = run[k].split("::")[1:]
     if "raster" in init_args:
-        args = init_args[init_args.index("raster") + 2 :]
+        args = init_args[init_args.index("raster") + 2:]
     else:
         logging.error("Need to specify a raster for %s:assign_by_value", k)
         return None

@@ -1,123 +1,207 @@
-# DSSAT-Pythia Installation Guide
+# Pythia
 
-## Software Requirements
-To install and run DSSAT-Pythia on your PC, you will need the following software:
+Pythia is an extensible framework for running point-based crop models over
+spatial data. It turns raster and vector inputs into DSSAT experiments, runs
+DSSAT, and can aggregate the resulting outputs.
 
-1. **DSSAT**:  
-   Download and install DSSAT from [DSSAT website](https://get.dssat.net/request/?sft=4).
+The usual workflow is:
 
-2. **Python 3.8**:  
-   Download the Python 3.8 installer for Windows or macOS from [Python 3.8 release page](https://www.python.org/downloads/release/python-389/).  
-   - During installation, select “Customize installation.”
-   - Select all options under “Optional Features” and “Advanced Options.”
-   - Note: DSSAT-Pythia only works with Python 3.8. If you have another version, uninstall it and download Python 3.8 from the above link.
+1. read a JSON configuration;
+2. select locations from a vector or raster data set;
+3. resolve weather, soil, cultivar, and management inputs for each location;
+4. create DSSAT experiment directories;
+5. run DSSAT and optionally aggregate results.
 
-3. **Git**:  
-   Download and install Git from [Git download page](https://git-scm.com/download/win).
+## Requirements
 
-4. **Community Version of Visual Studio**:  
-   Download and install Visual Studio from [Visual Studio website](https://visualstudio.microsoft.com/downloads/).  
-   Select the **Desktop development with C++** workload during installation.
+- Python 3.8 or newer (the automated tests cover Python 3.8 and 3.12);
+- a working [DSSAT installation](https://get.dssat.net/);
+- Git and [Poetry](https://python-poetry.org/docs/#installation) only when
+  building Pythia from source.
 
-5. **RStudio**:  
-   To use RStudio on your PC, install both R and RStudio:
-   - Download and install R from [CRAN website](https://cran.rstudio.com/).
-   - Download and install RStudio from [RStudio website](https://posit.co/download/rstudio-desktop/).
+R and RStudio are optional and are needed only for separate post-processing
+scripts. They are not required to install or run Pythia.
 
----
+On Windows, enable **Developer Mode** (or run with privileges that permit
+symbolic links). Pythia uses links while preparing DSSAT work directories.
 
+## Install a released build
 
-## Steps to Install DSSAT-Pythia on PC
+Download the Pythia `.whl` file for your operating environment from the
+[GitHub release](https://github.com/DSSAT/pythia/releases/latest). For an
+isolated command that is available outside the source directory, `pipx` is the
+recommended installation method:
 
-1. Enable **Developer Mode**:
-   - Open Windows Settings > Update & Security > For Developers.
-   - Switch on Developer Mode and restart the computer.
+```console
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+pipx install /path/to/pythia-VERSION-py3-none-any.whl
+```
 
-2. Open the **Command Prompt** in the C Drive:
-   - Open the C drive and type `cmd` in the address bar and press Enter.
+Open a new terminal, then verify exactly which command is being used:
 
-3. Clone the DSSAT-Pythia repository:
-   ```bash
-   git clone https://github.com/dssat/pythia.git pythia
-   ```
+```console
+command -v pythia
+pythia --help
+pipx list
+```
 
-4. Navigate to the cloned directory:
-   ```bash
-   cd pythia
-   ```
+On Windows PowerShell, use `py` instead of `python3` and
+`Get-Command pythia` instead of `command -v pythia`.
 
-5. Delete the `poetry.lock` file:
-   ```bash
-   del poetry.lock
-   ```
+To replace an older pipx installation with a new local wheel:
 
-6. Install Poetry:
-   ```bash
-   pip install poetry
-   ```
+```console
+pipx install --force /path/to/pythia-VERSION-py3-none-any.whl
+```
 
-7. Install DSSAT-Pythia:
-   ```bash
-   <full path to poetry>\poetry install
-   <full path to poetry>\poetry build
-   ```
-   - On Windows, poetry will be found in "C:\Users\username\AppData\Local\Programs\Python\Python38\Scripts"
-     
-8. Install the Pythia wheel file:
-   - Navigate to the `dist` folder and install the `.whl` file:
-     ```bash
-     cd dist
-     pip install pythia-2.3.0-py3-none-any.whl
-     ```
-   - **Note**: Check the version in the `dist` folder and adjust the command if necessary.
+Do not install into a Homebrew- or system-managed Python with
+`--break-system-packages`. A virtual environment or pipx avoids modifying that
+Python installation.
 
-9. Add the path to `pythia.exe` to your environment variables.
+## Build and install from source
 
-10. Close the command prompt.
+```console
+git clone https://github.com/DSSAT/pythia.git
+cd pythia
+python3 -m pip install --user poetry
+poetry install
+poetry run pytest
+poetry build
+pipx install --force dist/pythia-VERSION-py3-none-any.whl
+```
 
----
+Keep the committed `poetry.lock`; it makes dependency resolution repeatable.
+During development, commands can also be run without a global installation:
+
+```console
+poetry run pythia --help
+```
+
+## Download and configure the Sri Lanka example
+
+Download `Pythia-Example-Data-VERSION.zip` from the same GitHub release as the
+Pythia wheel and extract it. The resulting layout includes:
+
+```text
+Simulation_Data/
+├── eGHR/
+│   ├── GHR.db
+│   └── LK.SOL
+├── raster/
+│   └── ggcmi_soils_2.tif
+├── Sri_Lanka/
+│   ├── SL_Maize.json
+│   ├── SL_Rice.json
+│   └── SL_Rice_env.json
+├── weather_data/Sri_Lanka/
+└── OUTPUT/
+```
+
+The three JSON files intentionally contain portable placeholders. Replace them
+and validate all referenced files with one command:
+
+```console
+pythia --configure-example /path/to/Simulation_Data \
+  --dssat-executable /path/to/dscsm048
+```
+
+Windows PowerShell example:
+
+```powershell
+pythia --configure-example C:\Pythia\Simulation_Data `
+  --dssat-executable C:\DSSAT48\DSCSM048.EXE
+```
+
+This command:
+
+- replaces `<</path/to/folder>>` with the extracted directory;
+- replaces `<</path/to/dssat/executable>>` with the DSSAT executable;
+- keeps each portable source as `*.json.template`;
+- checks the example structure and every referenced input path.
+
+It is safe to run the command again after moving the data or DSSAT. Confirm the
+current configuration at any time:
+
+```console
+pythia --validate-example /path/to/Simulation_Data
+```
+
+## Run the examples
+
+Run the complete setup, simulation, and analysis sequence:
+
+```console
+pythia --all /path/to/Simulation_Data/Sri_Lanka/SL_Maize.json
+pythia --all /path/to/Simulation_Data/Sri_Lanka/SL_Rice.json
+pythia --all /path/to/Simulation_Data/Sri_Lanka/SL_Rice_env.json
+```
+
+For troubleshooting or HPC workflows, the stages can be run separately:
+
+```console
+pythia --setup CONFIG.json
+pythia --run-dssat CONFIG.json
+pythia --analyze CONFIG.json
+```
+
+Use `--clean-work-dir` only when an existing work directory should be removed
+before a new run. Results are written to the `workDir` defined in each JSON,
+below `Simulation_Data/OUTPUT/Sri_Lanka` in the bundled examples.
+
+## Configuration overview
+
+The main JSON fields are:
+
+| Field | Purpose |
+| --- | --- |
+| `workDir` | Generated DSSAT experiments and outputs |
+| `templateDir` | DSSAT experiment templates |
+| `weatherDir` | Weather files used by the experiments |
+| `ghr_root` | `GHR.db` and DSSAT `.SOL` files |
+| `default_setup` | Values and spatial lookup functions shared by runs |
+| `dssat.executable` | DSSAT command-line executable |
+| `runs` | Crop, management, year, and harvest-area scenarios |
+| `analytics_setup` | Output aggregation options |
+
+See the [configuration reference](docs/json.rst) and the
+[conceptual and operational guide](docs/understanding_pythia.rst) for details.
+
+## Soil raster compatibility
+
+Pythia automatically supports both soil raster formats:
+
+| Format | Raster bands | Supporting data |
+| --- | ---: | --- |
+| Legacy GHR | 1 | `GHR.db` plus the referenced `.SOL` files |
+| Encoded profile | 2 | Referenced `.SOL` files under `ghr_root` |
+
+The Sri Lanka example intentionally uses the legacy one-band
+`ggcmi_soils_2.tif`. Do not add a second band. Pythia reads the numeric cell
+identifier, resolves it through `eGHR/GHR.db`, and loads the matching profile
+from the `.SOL` files. See the [soil raster guide](docs/soil_rasters.rst) for
+format detection, diagnostics, and migration guidance.
 
 ## Troubleshooting
 
-- If you encounter any issues during installation, delete the folder `C:\pythia` and repeat the installation steps.
+- **`pythia: command not found`** — reopen the terminal after `pipx ensurepath`,
+  then inspect `pipx list` and `command -v pythia`.
+- **More than one executable is found** — remove the obsolete installation and
+  keep the pipx path first in `PATH`.
+- **Placeholders remain in JSON** — rerun `--configure-example` with absolute
+  paths.
+- **A referenced file is missing** — run `--validate-example`; it reports the
+  exact configuration and path.
+- **A one-band raster is rejected as requiring two bands** — an older/regressed
+  Pythia build is being executed. Install the release containing the legacy GHR
+  compatibility fix and confirm the executable path again.
+- **Windows reports a symbolic-link error** — enable Developer Mode and open a
+  new terminal.
 
----
+## Developer and release documentation
 
-## Input Files Setup
+- [Release procedure](docs/RELEASING.md)
+- [Example-data packaging instructions](docs/EXAMPLE_DATA_RELEASE.md)
+- [Change log](CHANGELOG.md)
 
-1. Download the `InputFiles.zip` folder from [Google Drive link](https://drive.google.com/file/d/1vlBeWEavNggcuhRMgmO79aHTYZ7aq_Im/view?usp=sharing), unzip it, and save the `Simulation_Data` folder in `C:\pythia\`.
-
-2. Open the folder `C:\pythia\Simulation_Data\OUTPUT\Sri_Lanka` and remove all folders (if any).
-
-   **Note**: Remove the contents from the `OUTPUT` folder every time you run the model.
-
----
-
-## Running the Model
-
-1. Open the command prompt at `C:\pythia\Simulation_Data\Sri_Lanka` by typing `cmd` in the folder address bar.
-
-2. Run the following commands to simulate maize and rice:
-   ```bash
-   pythia --all C:/pythia/Simulation_Data/Sri_Lanka/SL_Maize.json
-   pythia --all C:/pythia/Simulation_Data/Sri_Lanka/SL_Rice.json
-   ```
-
-3. To view the output:
-   - Open the `.json` file in `C:\pythia\Simulation_Data\Sri_Lanka\`.
-   - Find the working directory in `"workDir": "C:/pythia/Simulation_Data/OUTPUT/Sri_Lanka/…"` and navigate to that folder.
-   - The output will be available in `.csv` format.
-
----
-
-## Plotting Output in RStudio
-
-1. Open the R code file: `C:\pythia\Simulation_Data\OUTPUT\ACASA_Sri_Lanka_maize.R`.
-
-2. Install all required packages and modify the file location on line 22 to match the output `.csv` file.
-
-3. Run the R script to generate the yield plot.
-
-4. The plot will be saved at the location specified in line 62.
-
-   **Note**: If you encounter errors reading the `.csv` file, open the file and delete all columns except `LATITUDE`, `LONGITUDE`, and `HWAH`.
+Pythia is distributed under the BSD 3-Clause license.
