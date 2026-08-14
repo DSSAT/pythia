@@ -66,6 +66,8 @@ def build_example_archive(data_root, output, package_readme=None):
             readme = Path(package_readme).expanduser().resolve()
             archive.write(readme, f"{archive_root}/README.md")
         for source, relative in _release_files(root):
+            if package_readme and relative == Path("README.md"):
+                continue
             archive.write(source, (Path(archive_root) / relative).as_posix())
 
     size = destination.stat().st_size

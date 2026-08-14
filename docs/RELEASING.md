@@ -2,8 +2,12 @@
 
 Pythia uses [semantic versioning](https://semver.org/): increment `MAJOR` for
 incompatible changes, `MINOR` for backward-compatible features, and `PATCH` for
-backward-compatible fixes. The one-band soil compatibility correction should
-therefore be a patch release from 2.3.0 (for example, 2.3.1).
+backward-compatible fixes.
+
+The failed 2.3.1 workflow already published its version commit and tag before
+the Docker step failed. Do not reuse or move that tag. After merging the Docker
+release fix, publish 2.3.2 so every artifact is built from the same immutable
+source revision.
 
 ## Before triggering the release
 
@@ -35,7 +39,7 @@ change.
 ## GitHub release workflow
 
 Open [Actions → Release](https://github.com/DSSAT/pythia/actions/workflows/release.yml),
-choose **Run workflow**, enter a plain semantic version such as `2.3.1`, and
+choose **Run workflow**, enter a plain semantic version such as `2.3.2`, and
 run it from the intended branch. Do not add a `v` prefix.
 
 The workflow validates the version, updates `pyproject.toml`, builds and tests

@@ -4,6 +4,14 @@
 
 ### Fixed
 
+- Pinned the Docker build to the Debian 12 package repositories used by the
+  DSSAT base image, preventing the floating `stable` suite from mixing Debian
+  13 packages into a Debian 12 image.
+- Removed exact Debian revision pins for GDAL and isolated Poetry from the
+  system-managed Python environment.
+- Reordered the release workflow so a failed Docker build cannot publish a
+  version commit and Git tag before the release artifacts are ready.
+- Updated GitHub and Docker actions to their Node.js 24 generations.
 - Restored backward compatibility with legacy one-band GHR soil rasters.
 - Automatically detect one-band legacy and two-band encoded soil rasters.
 - Resolve legacy raster IDs through `GHR.db` and provide actionable errors for
