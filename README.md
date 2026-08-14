@@ -88,6 +88,7 @@ Simulation_Data/
 ├── eGHR/
 │   ├── GHR.db
 │   └── LK.SOL
+│   └── ...
 ├── raster/
 │   └── ggcmi_soils_2.tif
 ├── Sri_Lanka/
