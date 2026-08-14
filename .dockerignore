@@ -1,2 +1,12 @@
 .dockerignore
 .venv
+.git
+.github
+.history
+.pytest_cache
+__pycache__
+*.pyc
+*.log
+dist
+docs/build
+docs/source/_build
