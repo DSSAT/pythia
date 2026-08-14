@@ -102,6 +102,7 @@ def test_release_archive_is_portable_and_excludes_local_files(tmp_path):
     (root / "OUTPUT" / "old-run").mkdir(parents=True)
     (root / "OUTPUT" / "old-run" / "result.csv").write_text("result", encoding="utf-8")
     (root / ".DS_Store").write_bytes(b"local")
+    (root / "README.md").write_text("old readme", encoding="utf-8")
 
     executable = tmp_path / "dscsm048"
     executable.write_text("executable", encoding="utf-8")
@@ -115,6 +116,7 @@ def test_release_archive_is_portable_and_excludes_local_files(tmp_path):
     assert checksum.is_file()
     assert manifest["excluded_members"] == []
     assert "Simulation_Data/OUTPUT/" in manifest["members"]
+    assert manifest["members"].count("Simulation_Data/README.md") == 1
     assert "Simulation_Data/OUTPUT/old-run/result.csv" not in manifest["members"]
     for config in manifest["configs"].values():
         serialized = json.dumps(config)
