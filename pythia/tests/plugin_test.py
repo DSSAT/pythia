@@ -82,7 +82,7 @@ def test_plugin_manual_execution():
     plugins1 = load_plugins(config, plugins)
 
     for plugin in plugins1[PluginHook.post_config]:
-        assert 1 == plugin["fun"]()
+        assert 1 == plugin["fun"](plugin["config"])["retval"]
 
 
 def test_plugin_auto_execution():
@@ -94,7 +94,9 @@ def test_plugin_auto_execution():
     context1 = run_plugin_functions(
         PluginHook.post_build_context, plugins1, context=context
     ).get("context")
-    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1).get("context", None)
+    context2 = run_plugin_functions(PluginHook.post_build_context, plugins1).get(
+        "context", None
+    )
     assert context1 != context
     assert context1["context_value"] == 8
     assert context2["context_value"] == 3

@@ -1,26 +1,55 @@
-# Pythia - Release Guide
+# Pythia release guide
 
-## Versioning
+Pythia uses [semantic versioning](https://semver.org/): increment `MAJOR` for
+incompatible changes, `MINOR` for backward-compatible features, and `PATCH` for
+backward-compatible fixes. The one-band soil compatibility correction should
+therefore be a patch release from 2.3.0 (for example, 2.3.1).
 
-When it comes to managing software releases for Pythia, understanding how to properly version each release is crucial. Pythia follows the principles of [semantic versioning](https://semver.org/), a widely adopted system designed to give meaning to version numbers. In semantic versioning, a version number is made up of three parts: ``MAJOR.MINOR.PATCH``, with each part serving a specific purpose:
+## Before triggering the release
 
- - **MAJOR** version when you make incompatible API changes,
- - **MINOR** version when you add functionality in a backwards compatible manner, and
- - **PATCH** version when you make backwards compatible bug fixes.
+1. Work in a branch and review `git status` and `git diff`.
+2. Update `CHANGELOG.md`, README, and any affected reference documentation.
+3. Run:
 
-This system helps developers and users understand the scope and impact of each release. Here's a breakdown of when to increment each part of the version number:
+   ```console
+   poetry install
+   poetry run pytest
+   poetry build
+   ```
 
- - Increment the **MAJOR** version when there are significant changes that break backward compatibility with the previous versions. This could include changes to the software's architecture, removal of functionalities, or any other changes that would require users to make modifications to their existing setups.
- - Increment the **MINOR** version when new features or functionalities are added in a backward-compatible manner. This means that the new version adds value to the software without disrupting the existing functionalities or forcing changes in the users' setups.
- - Increment the **PATCH** version for minor changes that fix bugs without adding new features or changing existing ones. These should not affect the software's functionality beyond the specific fixes.
+4. Install the wheel in a clean pipx environment and check:
 
-## Release Process
-Pythia is released through GitHub Actions. Once a release is triggered, the CI/CD pipeline will automatically build the software and publish a Docker image to Dockerhub. A GitHub release is also created.
+   ```console
+   pipx install --force dist/pythia-VERSION-py3-none-any.whl
+   pythia --help
+   ```
 
-In order to deploy new versions of Pythia, go to "([Actions > Release](https://github.com/DSSAT/pythia/actions/workflows/release.yml) > Run Workflow > fill in the version number, follow [versioning](#versioning) to figure out this information > Run workflow).
+5. Prepare and test the Sri Lanka archive by following
+   [EXAMPLE_DATA_RELEASE.md](EXAMPLE_DATA_RELEASE.md).
+6. Commit the reviewed source, documentation, tests, and scripts. Open and merge
+   a pull request before creating the release.
 
-![image](https://github.com/DSSAT/pythia/assets/18128642/a5db0435-9d17-4be8-82c8-54adcbcf860d)
+Do not delete `poetry.lock`; update it with Poetry when dependency constraints
+change.
 
-> **IMPORTANT:** The version number must strictly match what is described in [versioning](#versioning). **Do not** add any kind of prefix or suffix that is not semantically valid.
- 
-> **IMPORTANT:** The version number on ``pyproject.toml`` is automatically updated by the CI/CD pipeline. **Do not** change it manually.
+## GitHub release workflow
+
+Open [Actions → Release](https://github.com/DSSAT/pythia/actions/workflows/release.yml),
+choose **Run workflow**, enter a plain semantic version such as `2.3.1`, and
+run it from the intended branch. Do not add a `v` prefix.
+
+The workflow validates the version, updates `pyproject.toml`, builds and tests
+the package, pushes the version commit and tag, builds the Docker image, creates
+the GitHub release, and attaches the Python wheel and source archive.
+
+After the workflow succeeds, manually attach the tested example ZIP and its
+`.sha256` file. Confirm that the release page contains all four kinds of
+artifact:
+
+- Python wheel;
+- Python source distribution;
+- example-data ZIP and SHA-256 checksum;
+- Docker image with the version and `latest` tags.
+
+Finally, download the public assets rather than using local copies and repeat
+the installation, `--validate-example`, maize, and rice smoke tests.

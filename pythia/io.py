@@ -22,13 +22,14 @@ import pythia.util
 
 def get_site_raster_value(dataset, band, site):
     lng, lat = site
-    row, col = dataset.index(lng, lat)
-    data = []
     try:
+        row, col = dataset.index(lng, lat)
+        if row < 0 or row >= dataset.height or col < 0 or col >= dataset.width:
+            return None
         data = band[row, col]
         if data is ma.masked:
             data = None
-    except IndexError:
+    except (IndexError, TypeError, ValueError):
         data = None
     return data
 
