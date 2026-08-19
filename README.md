@@ -80,7 +80,7 @@ poetry run pythia --help
 
 ## Download and configure the Sri Lanka example
 
-Download `Pythia-Example-Data-VERSION.zip` from the same GitHub release as the
+Download [`Pythia-Example-Data-VERSION.zip`](https://github.com/DSSAT/pythia/releases/latest) from the same GitHub release as the
 Pythia wheel and extract it. The resulting layout includes:
 
 ```text
